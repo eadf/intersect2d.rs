@@ -6,7 +6,7 @@ edition = "2018"
 description = "Line segment intersection detection"
 readme = "README.md"
 repository = "https://github.com/eadf/intersect2d.rs"
-license = "GNU Affero General Public License v3.0"
+license = "AGPL-3.0"
 keywords = ["intersection", "sweepline", "geometry"]
 
 # this bin is for development test purposes
