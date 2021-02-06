@@ -570,8 +570,6 @@ impl<T> AlgorithmData<T>
             T: 'a,
             I: Iterator<Item = &'a geo::Line<T>>,
     {
-        // Todo!!!! reject start == end - i.e. points
-
         let mut site_events = self.site_events.take().unwrap();
 
         for (index, aline) in data.enumerate() {
