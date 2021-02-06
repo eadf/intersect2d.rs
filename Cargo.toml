@@ -1,0 +1,35 @@
+[package]
+name = "intersect2d"
+version = "0.1.0"
+authors = ["eadf"]
+edition = "2018"
+description = "Line segment intersection detection"
+readme = "README.md"
+repository = "https://github.com/eadf/intersect2d.rs"
+license = "GNU Affero General Public License v3.0"
+keywords = ["intersection", "sweepline", "geometry"]
+
+# this bin is for development test purposes
+#[[bin]]
+#name = "main"
+#path = "src/main.rs"
+
+[[example]]
+name = "fltk_gui"
+path = "example/fltk_gui.rs"
+
+[dependencies]
+geo = "^0.17.0"
+ordered-float = "^2.0.1"
+rb_tree = "^0.3.2"
+approx = "^0.4.0"
+num-traits = "^0.2.14"
+fnv = "^1.0.7"
+
+[dev-dependencies]
+fltk = "^0.13.10"
+itertools = "^0.10.0"
+
+[features]
+# this is used to print algorithm progression traces to the console
+console_trace = []
