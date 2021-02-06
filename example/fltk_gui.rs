@@ -44,8 +44,8 @@ licenses /why-not-lgpl.html>.
  */
 
 use fltk::*;
-use intersect2d::scale_to_coordinate;
 use intersect2d::algorithm::AlgorithmData;
+use intersect2d::scale_to_coordinate;
 use itertools::Itertools;
 use num_traits::{Float, ToPrimitive};
 use std::cell::RefCell;

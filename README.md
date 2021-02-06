@@ -7,9 +7,9 @@
 [![dependency status](https://deps.rs/crate/intersect2d/0.1.0/status.svg)](https://deps.rs/crate/intersect2d/0.1.0)
 # intersection2d
 After watching [Philipp Kindermann's](https://www.youtube.com/watch?v=I9EsN2DTnN8) excellent sweep-line videos uncountable number 
-of times I think I finally understand how the algorithm works.
+of times I think I finally understand how this algorithm works.
 
-This is my take on an implementation of the segment line 
+This is my humble take on an implementation of the segment line 
 intersection sweep-line algorithm.
 \
 \

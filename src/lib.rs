@@ -118,35 +118,37 @@ where
     OverLap(geo::Line<T>),
 }
 
-impl<T> Intersection<T> where
+impl<T> Intersection<T>
+where
     T: Float
-    + Zero
-    + fmt::Display
-    + geo::CoordNum
-    + PartialOrd
-    + approx::AbsDiffEq
-    + approx::UlpsEq,
-    T::Epsilon: Copy,{
-
+        + Zero
+        + fmt::Display
+        + geo::CoordNum
+        + PartialOrd
+        + approx::AbsDiffEq
+        + approx::UlpsEq,
+    T::Epsilon: Copy,
+{
     /// return a single, simple intersection point
     pub fn single(&self) -> geo::Coordinate<T> {
-         match self {
-             Self::OverLap(a) => a.start,
-             Self::Intersection(a) => *a,
-         }
+        match self {
+            Self::OverLap(a) => a.start,
+            Self::Intersection(a) => *a,
+        }
     }
 }
 
-impl<T> fmt::Debug for Intersection<T> where
+impl<T> fmt::Debug for Intersection<T>
+where
     T: Float
-    + Zero
-    + fmt::Display
-    + geo::CoordNum
-    + PartialOrd
-    + approx::AbsDiffEq
-    + approx::UlpsEq,
-    T::Epsilon: Copy, {
-
+        + Zero
+        + fmt::Display
+        + geo::CoordNum
+        + PartialOrd
+        + approx::AbsDiffEq
+        + approx::UlpsEq,
+    T::Epsilon: Copy,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::OverLap(a) => a.fmt(f),
@@ -242,15 +244,16 @@ where
 
         // If r × s = 0 and (q − p) × r = 0, then the two lines are collinear.
         if ulps_eq(&q_minus_p_cross_r, &T::zero()) {
-
             let r_dot_r = dot(&r, &r);
             let r_div_r_dot_r = div(&r, r_dot_r);
-            let s_dot_r = dot(&s,&r);
+            let s_dot_r = dot(&s, &r);
             let t0 = dot(&q_minus_p, &r_div_r_dot_r);
-            let t1 = t0 + s_dot_r/r_dot_r;
+            let t1 = t0 + s_dot_r / r_dot_r;
 
-            Some(Intersection::OverLap(geo::Line::new(scale_to_coordinate(&p, &r, t0),
-                                       scale_to_coordinate(&p, &r, t1))))
+            Some(Intersection::OverLap(geo::Line::new(
+                scale_to_coordinate(&p, &r, t0),
+                scale_to_coordinate(&p, &r, t1),
+            )))
         } else {
             // If r × s = 0 and (q − p) × r ≠ 0,
             // then the two lines are parallel and non-intersecting.
@@ -290,9 +293,9 @@ where
 #[inline(always)]
 /// Divides a 'vector' by 'b'. Obviously, don't feed this with 'b' == 0
 fn div<T>(a: &geo::Coordinate<T>, b: T) -> geo::Coordinate<T>
-    where
-        T: Float + Zero + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
-        T::Epsilon: Copy,
+where
+    T: Float + Zero + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T::Epsilon: Copy,
 {
     geo::Coordinate {
         x: a.x / b,
@@ -313,9 +316,9 @@ where
 #[inline(always)]
 /// calculate the dot product of two lines
 fn dot<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> T
-    where
-        T: Float + Zero + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
-        T::Epsilon: Copy,
+where
+    T: Float + Zero + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T::Epsilon: Copy,
 {
     a.x * b.x + a.y * b.y
 }
@@ -339,5 +342,3 @@ where
 {
     T::ulps_eq(a, b, T::default_epsilon(), T::default_max_ulps())
 }
-
-

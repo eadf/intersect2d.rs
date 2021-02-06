@@ -43,6 +43,7 @@ License instead of this License. But first, please read <https://www.gnu.org/
 licenses /why-not-lgpl.html>.
  */
 
+use super::{intersect, ulps_eq, ulps_eq_c};
 use core::fmt;
 use fnv::FnvHashSet;
 use num_traits::{Float, Zero};
@@ -51,21 +52,20 @@ use std::cmp;
 use std::convert::identity;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use super::{intersect, ulps_eq, ulps_eq_c};
 
 #[derive(Clone, Copy)]
 pub struct SiteEventKey<T>
-    where
-        T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
-        T::Epsilon: Copy,
+where
+    T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
+    T::Epsilon: Copy,
 {
     pub pos: geo::Coordinate<T>,
 }
 
 impl<T> SiteEventKey<T>
-    where
-        T: Float + approx::UlpsEq + Copy + geo::CoordNum,
-        T::Epsilon: Copy,
+where
+    T: Float + approx::UlpsEq + Copy + geo::CoordNum,
+    T::Epsilon: Copy,
 {
     pub fn new(x: T, y: T) -> Self {
         Self {
@@ -75,9 +75,9 @@ impl<T> SiteEventKey<T>
 }
 
 impl<T> Debug for SiteEventKey<T>
-    where
-        T: Float + approx::UlpsEq + Copy + geo::CoordNum,
-        T::Epsilon: Copy,
+where
+    T: Float + approx::UlpsEq + Copy + geo::CoordNum,
+    T::Epsilon: Copy,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("")
@@ -88,43 +88,26 @@ impl<T> Debug for SiteEventKey<T>
 }
 
 impl<T> PartialOrd for SiteEventKey<T>
-    where
-        T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
-        T::Epsilon: Copy,
+where
+    T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T::Epsilon: Copy,
 {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl<T> Ord for SiteEventKey<T>
-    where
-        T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
-        T::Epsilon: Copy,
-{
-    fn cmp(&self, other: &Self) -> cmp::Ordering {
         if ulps_eq(&self.pos.y, &other.pos.y) {
             if ulps_eq(&self.pos.x, &other.pos.x) {
-                return cmp::Ordering::Equal;
+                return Some(cmp::Ordering::Equal);
             } else {
-                return OrderedFloat(self.pos.x).cmp(&OrderedFloat(other.pos.x));
+                return Some(OrderedFloat(self.pos.x).cmp(&OrderedFloat(other.pos.x)));
             }
         }
-        OrderedFloat(self.pos.y).cmp(&OrderedFloat(other.pos.y))
+        Some(OrderedFloat(self.pos.y).cmp(&OrderedFloat(other.pos.y)))
     }
-}
-
-impl<T> Eq for SiteEventKey<T>
-    where
-        T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
-        T::Epsilon: Copy,
-{
 }
 
 impl<T> PartialEq for SiteEventKey<T>
-    where
-        T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
-        T::Epsilon: Copy,
+where
+    T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T::Epsilon: Copy,
 {
     fn eq(&self, other: &Self) -> bool {
         ulps_eq_c(&self.pos, &other.pos)
@@ -136,9 +119,9 @@ impl<T> PartialEq for SiteEventKey<T>
 /// value right of the point. Secondarily it prioritizes according to slope of the line, lines
 /// leaning towards pivot point have priority.
 struct MinMax<T>
-    where
-        T: Float + approx::UlpsEq + geo::CoordNum,
-        T::Epsilon: Copy,
+where
+    T: Float + approx::UlpsEq + geo::CoordNum,
+    T::Epsilon: Copy,
 {
     best_left: Option<T>,
     slope: MinMaxSlope<T>,
@@ -146,9 +129,9 @@ struct MinMax<T>
 }
 
 impl<T> MinMax<T>
-    where
-        T: Sized + Float + fmt::Display + approx::UlpsEq + geo::CoordNum,
-        T::Epsilon: Copy,
+where
+    T: Sized + Float + fmt::Display + approx::UlpsEq + geo::CoordNum,
+    T::Epsilon: Copy,
 {
     fn new() -> Self {
         Self {
@@ -226,21 +209,21 @@ impl<T> MinMax<T>
 }
 
 struct MinMaxSlope<T>
-    where
-        T: Float + approx::UlpsEq + geo::CoordNum,
-        T::Epsilon: Copy,
+where
+    T: Float + approx::UlpsEq + geo::CoordNum,
+    T::Epsilon: Copy,
 {
     best_left: Option<T>, // slope
-candidates_left: Vec<usize>,
+    candidates_left: Vec<usize>,
 
     best_right: Option<T>, // slope
-candidates_right: Vec<usize>,
+    candidates_right: Vec<usize>,
 }
 
 impl<T> MinMaxSlope<T>
-    where
-        T: Sized + Float + fmt::Display + approx::UlpsEq + geo::CoordNum,
-        T::Epsilon: Copy,
+where
+    T: Sized + Float + fmt::Display + approx::UlpsEq + geo::CoordNum,
+    T::Epsilon: Copy,
 {
     fn new() -> Self {
         Self {
@@ -359,9 +342,9 @@ impl<T> MinMaxSlope<T>
 /// The 'intersection' list contains the line segments that intersects at the event point.
 ///
 pub struct SiteEvent<T>
-    where
-        T: Float + approx::UlpsEq + geo::CoordNum,
-        T::Epsilon: Copy,
+where
+    T: Float + approx::UlpsEq + geo::CoordNum,
+    T::Epsilon: Copy,
 {
     drop: Option<Vec<usize>>,
     add: Option<Vec<usize>>,
@@ -370,9 +353,9 @@ pub struct SiteEvent<T>
 }
 
 impl<T> SiteEvent<T>
-    where
-        T: Float + approx::UlpsEq + geo::CoordNum,
-        T::Epsilon: Copy,
+where
+    T: Float + approx::UlpsEq + geo::CoordNum,
+    T::Epsilon: Copy,
 {
     /*
     pub(crate) fn new() -> Self {
@@ -419,15 +402,15 @@ impl<T> SiteEvent<T>
 /// Returns *one* point of intersection between the `sweepline` and `other`
 /// Second return value is the slope of the line
 fn sweepline_intersection<T>(sweepline: geo::Coordinate<T>, other: &geo::Line<T>) -> Option<(T, T)>
-    where
-        T: Float
+where
+    T: Float
         + Zero
         + fmt::Display
         + geo::CoordNum
         + PartialOrd
         + approx::AbsDiffEq
         + approx::UlpsEq,
-        T::Epsilon: Copy,
+    T::Epsilon: Copy,
 {
     // line equation: y=slope*x+d => d=y-slope*x => x = (y-d)/slope
     let y1 = other.start.y;
@@ -461,9 +444,9 @@ fn sweepline_intersection<T>(sweepline: geo::Coordinate<T>, other: &geo::Line<T>
 /// Most of these containers are stored inside an Option. This makes it possible
 /// to take() them and make the borrow-checker happy.
 pub struct AlgorithmData<T>
-    where
-        T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
-        T::Epsilon: Copy,
+where
+    T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T::Epsilon: Copy,
 {
     // sweep-line position
     sweepline_pos: geo::Coordinate<T>,
@@ -489,15 +472,15 @@ pub struct AlgorithmData<T>
 }
 
 impl<T> Default for AlgorithmData<T>
-    where
-        T: Float
+where
+    T: Float
         + fmt::Display
         + num_traits::ToPrimitive
         + geo::CoordNum
         + PartialOrd
         + approx::AbsDiffEq
         + approx::UlpsEq,
-        T::Epsilon: Copy,
+    T::Epsilon: Copy,
 {
     fn default() -> Self {
         Self {
@@ -519,15 +502,15 @@ impl<T> Default for AlgorithmData<T>
 }
 
 impl<T> AlgorithmData<T>
-    where
-        T: Float
+where
+    T: Float
         + fmt::Display
         + num_traits::ToPrimitive
         + geo::CoordNum
         + PartialOrd
         + approx::AbsDiffEq
         + approx::UlpsEq,
-        T::Epsilon: Copy,
+    T::Epsilon: Copy,
 {
     pub fn get_sweepline_pos(&self) -> &geo::Coordinate<T> {
         &self.sweepline_pos
@@ -566,9 +549,9 @@ impl<T> AlgorithmData<T>
     /// Populate the event queue
     /// Todo add error when data contains NaN (for example)
     pub fn with_lines<'a, I>(&mut self, data: I)
-        where
-            T: 'a,
-            I: Iterator<Item = &'a geo::Line<T>>,
+    where
+        T: 'a,
+        I: Iterator<Item = &'a geo::Line<T>>,
     {
         let mut site_events = self.site_events.take().unwrap();
 
@@ -833,7 +816,7 @@ impl<T> AlgorithmData<T>
 
             //print!("(sweepline_intersection id={:?}", line_index);
             if let Some((intersection_x, intersection_slope)) =
-            sweepline_intersection(self.sweepline_pos, self.lines.get(*line_index).unwrap())
+                sweepline_intersection(self.sweepline_pos, self.lines.get(*line_index).unwrap())
             {
                 //println!(" @{}^{})", intersection_x, intersection_slope);
                 neighbour_priority.update(
@@ -919,7 +902,7 @@ impl<T> AlgorithmData<T>
                 );
             }
         }
-        #[cfg(any(test,example))]
+        #[cfg(any(test, example))]
         println!("Post active lines: {:?}", active_lines);
         #[cfg(feature = "console_trace")]
         println!();
@@ -947,7 +930,7 @@ impl<T> AlgorithmData<T>
                     // don't allow intersection 'behind' or 'at' current sweep-line position
                     if intersection_p.y >= self.sweepline_pos.y
                         && !(intersection_p.y == self.sweepline_pos.y
-                        && intersection_p.x < self.sweepline_pos.x)
+                            && intersection_p.x < self.sweepline_pos.x)
                         && !ulps_eq_c(&intersection_p, &self.sweepline_pos)
                     {
                         #[cfg(feature = "console_trace")]
