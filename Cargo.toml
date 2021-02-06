@@ -27,7 +27,7 @@ num-traits = "^0.2.14"
 fnv = "^1.0.7"
 
 [dev-dependencies]
-fltk = "^0.13.10"
+fltk = "^0.14.1"
 itertools = "^0.10.0"
 
 [features]
