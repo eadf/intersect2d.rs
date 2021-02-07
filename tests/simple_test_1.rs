@@ -81,14 +81,16 @@ fn two_connected_3() {
     // use intersect2d::algorithm::AlgorithmData;
     let _l = vec!(geo::Line::new(geo::Coordinate{x:200., y:200.},geo::Coordinate{x:350., y:300.}),
                   geo::Line::new(geo::Coordinate{x:400., y:200.},geo::Coordinate{x:250., y:300.}));
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(false);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    // i'd like to use for .... in ad.get_results().iter().flatten() {
-    // but it does not work for some reason
-    if let Some(result) = ad.get_results() {
-        for (p,l) in result.iter() {
+    if let Some(results) = {
+        let mut ad = AlgorithmData::<f64>::default();
+        ad.with_ignore_end_point_intersections(false);
+        ad.with_lines(_l.iter());
+        ad.compute(false);
+        ad.take_results()
+    } {
+        // i'd like to use for .... in ad.get_results().iter().flatten() {
+        // but it does not work for some reason
+        for (p,l) in results.iter() {
             println!("Intersection @{:?} Involved lines:{:?}", p, l);
         }
     }

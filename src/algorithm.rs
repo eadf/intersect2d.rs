@@ -524,6 +524,11 @@ where
         &self.result
     }
 
+    // This removes the results from the AlgorithmData structure
+    pub fn take_results(&mut self) -> Option<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>> {
+        self.result.take()
+    }
+
     pub fn get_site_events(&self) -> &Option<rb_tree::RBMap<SiteEventKey<T>, SiteEvent<T>>> {
         &self.site_events
     }
