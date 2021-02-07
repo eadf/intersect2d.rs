@@ -440,7 +440,7 @@ where
     Some(((sweepline.y - d) / slope, slope))
 }
 
-/// Contains the data the sweepline intersection algorithm needs to operate.
+/// Contains the data the sweep-line intersection algorithm needs to operate.
 /// Most of these containers are stored inside an Option. This makes it possible
 /// to take() them and make the borrow-checker happy.
 pub struct AlgorithmData<T>
@@ -450,25 +450,25 @@ where
 {
     // sweep-line position
     sweepline_pos: geo::Coordinate<T>,
-
     // Stop when first intersection is found
     stop_at_first_intersection: bool,
-
     // Allow start&end points to intersect
     // i.e. don't report them as an intersection.
     // An endpoint intersecting another line will still be counted as an intersection.
     pub ignore_end_point_intersections: bool,
-
+    // the unhandled events
     site_events: Option<rb_tree::RBMap<SiteEventKey<T>, SiteEvent<T>>>,
-
+    // the lines we are considering at any given point in time
     active_lines: Option<FnvHashSet<usize>>,
-    // the input geometry.
+    // the input geometry. These lines are re-arranged so that Line.start.y <= Line.end.y
     lines: Vec<geo::Line<T>>,
     // A list of intersection points and the line segments involved in each intersection
     result: Option<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>>,
     intersection_calls: usize,
-    leftright: Option<MinMax<T>>,
-    leftright_events: Option<MinMaxSlope<T>>,
+    // the 'best' lines surrounding the event point but not directly connected to the point.
+    neighbour_priority: Option<MinMax<T>>,
+    // the 'best' lines directly connected to the event point.
+    active_priority: Option<MinMaxSlope<T>>,
 }
 
 impl<T> Default for AlgorithmData<T>
@@ -495,8 +495,8 @@ where
             result: Some(rb_tree::RBMap::new()),
             active_lines: Some(FnvHashSet::default()),
             intersection_calls: 0,
-            leftright: Some(MinMax::new()),
-            leftright_events: Some(MinMaxSlope::new()),
+            neighbour_priority: Some(MinMax::new()),
+            active_priority: Some(MinMaxSlope::new()),
         }
     }
 }
@@ -547,7 +547,7 @@ where
     /// Add data to the input lines.
     /// Sort the end point according to the order of SiteEventKey.
     /// Populate the event queue
-    /// Todo add error when data contains NaN (for example)
+    /// Todo: add error when data contains NaN (for example)
     pub fn with_lines<'a, I>(&mut self, data: I)
     where
         T: 'a,
@@ -653,15 +653,16 @@ where
             return true;
         }
 
-        // foil the borrow checker by taking the self.containers
+        // make the borrow checker happy by breaking the link between self and all the
+        // containers and their iterators.
         let mut active_lines = self.active_lines.take().unwrap();
         let mut site_events = self.site_events.take().unwrap();
         let mut result = self.result.take().unwrap();
+        let mut neighbour_priority = self.neighbour_priority.take().unwrap();
+        let mut active_priority = self.active_priority.take().unwrap();
 
         // return value
         let mut algorithm_is_done = false;
-        let mut neighbour_priority = self.leftright.take().unwrap();
-        let mut active_priority = self.leftright_events.take().unwrap();
 
         'pop_loop: loop {
             if let Some((key, event)) = site_events.pop_pair() {
@@ -694,8 +695,8 @@ where
         self.site_events = Some(site_events);
         self.active_lines = Some(active_lines);
         self.result = Some(result);
-        self.leftright = Some(neighbour_priority);
-        self.leftright_events = Some(active_priority);
+        self.neighbour_priority = Some(neighbour_priority);
+        self.active_priority = Some(active_priority);
         algorithm_is_done
     }
 
