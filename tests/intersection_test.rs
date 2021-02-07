@@ -197,8 +197,8 @@ fn intersection_7() {
 fn intersection_8() {
     // line to point detection
     for r in (0..360).step_by(3) {
-        let line1 = pivot(200.0, 200.0, 50.0, 0.1, r as f64);
-        let line2 = pivot(200.0, 200.0, 0.1, 50.0, r as f64);
+        let line1 = pivot(200.0, 200.0, 50.0, 1.0, r as f64);
+        let line2 = pivot(200.0, 200.0, 50.0, 1.0, r as f64);
 
         println!(
             "line1:{:?} slope:{}",
@@ -215,6 +215,67 @@ fn intersection_8() {
         match rv {
             Some(Intersection::Intersection(_a)) => panic!("expected an overlap, got {:?}", _a),
             Some(Intersection::OverLap(_a)) => println!("{:?}", _a),
+            _ => panic!("expected an overlap, got None"),
+        }
+    }
+}
+
+//#[ignore]
+#[test]
+fn intersection_9() {
+    // overlapping lines
+    for r in (0..360).step_by(3) {
+        let line1 = pivot(200.0, 200.0, 50.0, 1.0, r as f64);
+
+        println!(
+            "line1:{:?} slope:{}",
+            line1,
+            (line1.start.x - line1.end.x) / (line1.start.y - line1.end.y)
+        );
+
+        let rv = intersect(&line1, &line1);
+        match rv {
+            Some(Intersection::Intersection(_a)) => panic!("expected an overlap, got {:?}", _a),
+            Some(Intersection::OverLap(_a)) => {
+                println!("{:?}", _a);
+                assert_eq!(_a.start, line1.start);
+                assert_eq!(_a.end, line1.end);
+            }
+            _ => panic!("expected an overlap, got None"),
+        }
+    }
+}
+
+//#[ignore]
+#[test]
+fn intersection_10() {
+    // overlapping lines
+    for r in (0..360).step_by(3) {
+        let line1 = pivot(200.0, 200.0, 50.0, 1.0, r as f64);
+        let line2 = geo::Line {
+            start: line1.end,
+            end: line1.start,
+        };
+
+        println!(
+            "line1:{:?} slope:{}",
+            line1,
+            (line1.start.x - line1.end.x) / (line1.start.y - line1.end.y)
+        );
+        println!(
+            "line2:{:?} slope:{}",
+            line2,
+            (line2.start.x - line2.end.x) / (line2.start.y - line2.end.y)
+        );
+
+        let rv = intersect(&line1, &line1);
+        match rv {
+            Some(Intersection::Intersection(_a)) => panic!("expected an overlap, got {:?}", _a),
+            Some(Intersection::OverLap(_a)) => {
+                println!("{:?}", _a);
+                assert_eq!(_a.start, line1.start);
+                assert_eq!(_a.end, line1.end);
+            }
             _ => panic!("expected an overlap, got None"),
         }
     }

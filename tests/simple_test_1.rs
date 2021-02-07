@@ -1,4 +1,5 @@
 use approx;
+use geo::algorithm::intersects::Intersects;
 use intersect2d::algorithm::{AlgorithmData, SiteEventKey};
 #[allow(unused_imports)]
 use intersect2d::{intersect, scale_to_coordinate, ulps_eq};
@@ -175,7 +176,157 @@ fn connected_3_4() {
     );
 }
 
-//#[ignore] //fails!!
+#[test]
+fn connected_3_5() {
+    // this is test connected_3_5
+    let _l: [[f64; 4]; 6] = [
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 300., 400., 300.],
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 300., 400., 300.],
+    ];
+    let mut ad = AlgorithmData::<f64>::default();
+    ad.with_ignore_end_point_intersections(true);
+    let _l = to_lines(&_l);
+    ad.with_lines(_l.iter());
+    ad.compute(false);
+    assert!(ad.get_results().is_some());
+    let _result = ad.get_results().as_ref().unwrap();
+    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let (k, i) = iter.next().unwrap();
+    let intersection = SiteEventKey::new(300., 300.);
+    let lines = [0, 1, 2, 3, 4, 5];
+    assert_eq!(&intersection, k);
+    assert_eq!(
+        i.iter().collect::<Vec<&usize>>().sort(),
+        lines.iter().collect::<Vec<&usize>>().sort()
+    );
+    for lineid_1 in i.iter().rev().skip(1) {
+        for lineid_2 in i.iter().skip(1) {
+            if lineid_1 == lineid_2 {
+                continue;
+            }
+            println!("line1:{} line2:{}", lineid_1, lineid_2);
+            assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
+        }
+    }
+}
+
+#[test]
+fn connected_3_6() {
+    // this is test connected_3_6
+    let _l: [[f64; 4]; 6] = [
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 300., 300., 300.],
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 300., 300., 300.],
+    ];
+    let mut ad = AlgorithmData::<f64>::default();
+    ad.with_ignore_end_point_intersections(true);
+    let _l = to_lines(&_l);
+    ad.with_lines(_l.iter());
+    ad.compute(false);
+    assert!(ad.get_results().is_some());
+    let _result = ad.get_results().as_ref().unwrap();
+    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    //No result!
+    assert!(iter.next().is_none());
+}
+
+#[test]
+fn connected_3_7() {
+    // this is test connected_3_7
+    let _l: [[f64; 4]; 6] = [
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 300., 300., 300.],
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 300., 300., 300.],
+    ];
+    let mut ad = AlgorithmData::<f64>::default();
+    ad.with_ignore_end_point_intersections(false);
+    let _l = to_lines(&_l);
+    ad.with_lines(_l.iter());
+    ad.compute(false);
+    assert!(ad.get_results().is_some());
+    let _result = ad.get_results().as_ref().unwrap();
+    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let (k, i) = iter.next().unwrap();
+    let intersection = SiteEventKey::new(200., 200.);
+    let lines = [0, 3];
+    assert_eq!(&intersection, k);
+    assert_eq!(
+        i.iter().collect::<Vec<&usize>>().sort(),
+        lines.iter().collect::<Vec<&usize>>().sort()
+    );
+    for lineid_1 in i.iter().rev().skip(1) {
+        for lineid_2 in i.iter().skip(1) {
+            if lineid_1 == lineid_2 {
+                continue;
+            }
+            println!("line1:{} line2:{}", lineid_1, lineid_2);
+            assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
+        }
+    }
+    let (k, i) = iter.next().unwrap();
+    let intersection = SiteEventKey::new(400., 200.);
+    let lines = [1, 4];
+    assert_eq!(&intersection, k);
+    assert_eq!(
+        i.iter().collect::<Vec<&usize>>().sort(),
+        lines.iter().collect::<Vec<&usize>>().sort()
+    );
+    for lineid_1 in i.iter().rev().skip(1) {
+        for lineid_2 in i.iter().skip(1) {
+            if lineid_1 == lineid_2 {
+                continue;
+            }
+            println!("line1:{} line2:{}", lineid_1, lineid_2);
+            assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
+        }
+    }
+    let (k, i) = iter.next().unwrap();
+    let intersection = SiteEventKey::new(200., 300.);
+    let lines = [2, 5];
+    assert_eq!(&intersection, k);
+    assert_eq!(
+        i.iter().collect::<Vec<&usize>>().sort(),
+        lines.iter().collect::<Vec<&usize>>().sort()
+    );
+    for lineid_1 in i.iter().rev().skip(1) {
+        for lineid_2 in i.iter().skip(1) {
+            if lineid_1 == lineid_2 {
+                continue;
+            }
+            println!("line1:{} line2:{}", lineid_1, lineid_2);
+            assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
+        }
+    }
+    let (k, i) = iter.next().unwrap();
+    let intersection = SiteEventKey::new(300., 300.);
+    let lines = [0, 1, 2, 3, 4, 5];
+    assert_eq!(&intersection, k);
+    assert_eq!(
+        i.iter().collect::<Vec<&usize>>().sort(),
+        lines.iter().collect::<Vec<&usize>>().sort()
+    );
+    for lineid_1 in i.iter().rev().skip(1) {
+        for lineid_2 in i.iter().skip(1) {
+            if lineid_1 == lineid_2 {
+                continue;
+            }
+            println!("line1:{} line2:{}", lineid_1, lineid_2);
+            assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
+        }
+    }
+}
+
+//#[ignore]
 #[test]
 fn chevron_1() {
     // this is chevron_1
@@ -204,7 +355,7 @@ fn chevron_1() {
     );
 }
 
-//#[ignore] //fails!!
+//#[ignore]
 #[test]
 fn chevron_2() {
     // this is chevron_2
@@ -247,6 +398,49 @@ fn chevron_2() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+}
+
+//#[ignore]
+#[test]
+fn chevron_3() {
+    // this is chevron_3
+    let _l: [[f64; 4]; 10] = [
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 250., 310., 350.],
+        [400., 250., 290., 350.],
+        [200., 250., 300., 400.],
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 250., 310., 350.],
+        [400., 250., 290., 350.],
+        [200., 250., 300., 400.],
+    ];
+    let mut ad = AlgorithmData::<f64>::default();
+    ad.with_ignore_end_point_intersections(true);
+    let _l = to_lines(&_l);
+    ad.with_lines(_l.iter());
+    ad.compute(false);
+    assert!(ad.get_results().is_some());
+    let _result = ad.get_results().as_ref().unwrap();
+    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let (k, i) = iter.next().unwrap();
+    let intersection = SiteEventKey::new(300., 340.9090909090909);
+    let lines = [2, 3, 7, 8];
+    assert_eq!(&intersection, k);
+    assert_eq!(
+        i.iter().collect::<Vec<&usize>>().sort(),
+        lines.iter().collect::<Vec<&usize>>().sort()
+    );
+    for lineid_1 in i.iter().rev().skip(1) {
+        for lineid_2 in i.iter().skip(1) {
+            if lineid_1 == lineid_2 {
+                continue;
+            }
+            println!("line1:{} line2:{}", lineid_1, lineid_2);
+            assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
+        }
+    }
 }
 
 //#[ignore]
