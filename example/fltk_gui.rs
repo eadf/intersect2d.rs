@@ -322,6 +322,16 @@ fn generate_test(data: Rc<RefCell<AlgorithmData<f64>>>) {
             println!("];");
             println!("assert_eq!(&intersection, k);");
             println!("assert_eq!( i.iter().collect::<Vec<&usize>>().sort(), lines.iter().collect::<Vec<&usize>>().sort());");
+            println!("];");
+            println!("assert_eq!(&intersection, k);");
+            println!("assert_eq!( i.iter().collect::<Vec<&usize>>().sort(), lines.iter().collect::<Vec<&usize>>().sort());");
+            println!("for lineid_1 in i.iter().rev().skip(1) {{");
+            println!(" for lineid_2 in i.iter().skip(1) {{");
+            println!("  if lineid_1 == lineid_2 {{continue}}");
+            println!("   println!(\"line1:{{}} line2:{{}}\", lineid_1, lineid_2);");
+            println!("   assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));");
+            println!(" }}");
+            println!("}}");
         }
     }
     println!();
