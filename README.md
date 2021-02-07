@@ -6,8 +6,8 @@
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)
 [![dependency status](https://deps.rs/crate/intersect2d/0.1.0/status.svg)](https://deps.rs/crate/intersect2d/0.1.0)
 # intersection2d
-After watching [Philipp Kindermann's](https://www.youtube.com/watch?v=I9EsN2DTnN8) excellent sweep-line videos uncountable number 
-of times I think I finally understand how this algorithm works.
+After watching [Philipp Kindermann's](https://www.youtube.com/watch?v=I9EsN2DTnN8) excellent sweep-line 
+videos I think I finally understand how this algorithm works.
 
 This is my humble take on an implementation of the segment line 
 intersection sweep-line algorithm.
@@ -24,9 +24,10 @@ Quick iterative example:
 cargo run --example fltk_gui --features console_trace
 ```
 
-API example:
+Intersection function API example:
 ```rust
-use intersection2d::intersect;
+use intersection2d::{intersect, Intersection};
+use geo;
 
 let line1 = geo::Line::<f64>::new(
     geo::Coordinate { x: 100.0, y: 150.0 },
@@ -49,6 +50,23 @@ if let Some(_rv) =_rv {
 }
 ```
 
+Sweep-line API example:
+```rust
+use geo;
+use intersect2d::algorithm::AlgorithmData;
+
+let _l = vec!(geo::Line::new(geo::Coordinate{x:200.,y:200.},geo::Coordinate{x:350.,y:300.}),
+              geo::Line::new(geo::Coordinate{x:400.,y:200.},geo::Coordinate{x:250.,y:300.}));
+let mut ad = AlgorithmData::<f64>::default();
+ad.with_ignore_end_point_intersections(false);
+ad.with_lines(_l.iter());
+ad.compute(false);
+if let Some(result) = ad.get_results() {
+    for (p,l) in result.iter() {
+        println!("Intersection @{:?} Involved lines:{:?}", p, l);
+    }
+}
+```
 ## Todo
 - [ ] Error handling
 - [ ] Benchmark and optimize
