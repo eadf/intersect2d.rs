@@ -45,7 +45,7 @@ licenses /why-not-lgpl.html>.
 
 use fltk::*;
 use intersect2d::algorithm::AlgorithmData;
-use intersect2d::scale_to_coordinate;
+use intersect2d::{scale_to_coordinate, to_lines};
 use itertools::Itertools;
 use num_traits::{Float, ToPrimitive};
 use std::cell::RefCell;
@@ -201,30 +201,6 @@ fn main() {
             std::thread::sleep(std::time::Duration::from_millis(1));
         }
     }
-}
-
-/// Convert an array slice into a vec of Line
-#[allow(dead_code)]
-fn to_lines<U, T>(points: &[[U; 4]]) -> Vec<geo::Line<T>>
-where
-    U: ToPrimitive + Copy,
-    T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
-    T::Epsilon: Copy,
-{
-    let mut rv = Vec::with_capacity(points.len());
-    for p in points.iter() {
-        rv.push(geo::Line::<T>::new(
-            geo::Coordinate {
-                x: T::from(p[0]).unwrap(),
-                y: T::from(p[1]).unwrap(),
-            },
-            geo::Coordinate {
-                x: T::from(p[2]).unwrap(),
-                y: T::from(p[3]).unwrap(),
-            },
-        ));
-    }
-    rv
 }
 
 /// draws a line pivoting around (x,y) with 'angle' in degrees

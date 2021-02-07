@@ -1,7 +1,7 @@
 use approx;
 use intersect2d::algorithm::{AlgorithmData, SiteEventKey};
 #[allow(unused_imports)]
-use intersect2d::{intersect, scale_to_coordinate, ulps_eq, Intersection};
+use intersect2d::{intersect, scale_to_coordinate, ulps_eq, to_lines, Intersection};
 use num_traits::{Float, ToPrimitive};
 
 #[allow(dead_code)]
@@ -12,29 +12,6 @@ where
 {
     assert!(ulps_eq(&x1, &x2));
     assert!(ulps_eq(&y1, &y2));
-}
-
-/// Convert an array slice into a vec of Line
-fn to_lines<U, T>(points: &[[U; 4]]) -> Vec<geo::Line<T>>
-where
-    U: ToPrimitive + Copy,
-    T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
-    T::Epsilon: Copy,
-{
-    let mut rv = Vec::with_capacity(points.len());
-    for p in points.iter() {
-        rv.push(geo::Line::<T>::new(
-            geo::Coordinate {
-                x: T::from(p[0]).unwrap(),
-                y: T::from(p[1]).unwrap(),
-            },
-            geo::Coordinate {
-                x: T::from(p[2]).unwrap(),
-                y: T::from(p[3]).unwrap(),
-            },
-        ));
-    }
-    rv
 }
 
 //#[ignore]

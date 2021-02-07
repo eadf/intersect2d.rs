@@ -51,11 +51,33 @@ licenses /why-not-lgpl.html>.
 #![deny(unused_imports)]
 
 use core::fmt;
-use num_traits::{Float, Zero};
-//use std::cmp;
-//use ordered_float::OrderedFloat;
+use num_traits::{Float, Zero, ToPrimitive};
 
 pub mod algorithm;
+
+/// Utility function converting an array slice into a vec of Line
+#[allow(dead_code)]
+pub fn to_lines<U, T>(points: &[[U; 4]]) -> Vec<geo::Line<T>>
+    where
+        U: ToPrimitive + Copy,
+        T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
+        T::Epsilon: Copy,
+{
+    let mut rv = Vec::with_capacity(points.len());
+    for p in points.iter() {
+        rv.push(geo::Line::<T>::new(
+            geo::Coordinate {
+                x: T::from(p[0]).unwrap(),
+                y: T::from(p[1]).unwrap(),
+            },
+            geo::Coordinate {
+                x: T::from(p[2]).unwrap(),
+                y: T::from(p[3]).unwrap(),
+            },
+        ));
+    }
+    rv
+}
 
 /// Get any intersection point between line segment and point.
 /// Inspired by https://stackoverflow.com/a/17590923
