@@ -20,7 +20,7 @@ fn two_connected_1() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 2] = [[200., 200., 300., 300.], [400., 200., 300., 300.]];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     //No result!
@@ -33,7 +33,7 @@ fn two_connected_2() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 2] = [[200., 200., 300., 300.], [400., 200., 300., 300.]];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -64,7 +64,7 @@ fn two_connected_3() -> Result<(), intersect2d::Error> {
     ];
     let results = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
-        .with_lines(_l.iter())?
+        .with_lines(_l.into_iter())?
         .compute()?;
     for (p, l) in results.iter() {
         println!("Intersection @{:?} Involved lines:{:?}", p, l);
@@ -83,7 +83,7 @@ fn connected_3_1() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_lines(to_lines(&_l).into_iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -96,40 +96,20 @@ fn connected_3_1() -> Result<(), intersect2d::Error> {
     );
     Ok(())
 }
+
 #[test]
-fn connected_3_1_copy() -> Result<(), intersect2d::Error> {
-    let _l: [[f64; 4]; 3] = [
-        [200., 200., 300., 300.],
-        [400., 200., 300., 300.],
-        [200., 300., 300., 300.],
-    ];
-    let _l = to_lines(&_l);
-    let result = AlgorithmData::<f64>::default()
-        .with_ignore_end_point_intersections(false)?
-        .with_lines(_l.iter())?
+fn connected_3_1_linestring() -> Result<(), intersect2d::Error> {
+    // README example
+    let coords = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
+    let line_string: geo::LineString<f32> = coords.into_iter().collect();
+
+    let result = AlgorithmData::<f32>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_stop_at_first_intersection(true)?
+        .with_lines(line_string.lines())?
         .compute()?;
-    let mut iter = result.iter();
-    let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
-    let lines = [0, 1, 2];
-    assert_eq!(&intersection, k);
-    assert_eq!(
-        i.iter().collect::<Vec<&usize>>().sort(),
-        lines.iter().collect::<Vec<&usize>>().sort()
-    );
-    assert_eq!(&intersection, k);
-    assert_eq!(
-        i.iter().collect::<Vec<&usize>>().sort(),
-        lines.iter().collect::<Vec<&usize>>().sort()
-    );
-    for lineid_1 in i.iter().rev().skip(1) {
-        for lineid_2 in i.iter().skip(1) {
-            if lineid_1 == lineid_2 {
-                continue;
-            }
-            println!("line1:{} line2:{}", lineid_1, lineid_2);
-            assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
-        }
+    for (p, l) in result.iter() {
+        println!("Intersection detected @{:?} Involved lines:{:?}", p, l);
     }
     Ok(())
 }
@@ -145,7 +125,7 @@ fn connected_3_2() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     //No result!
@@ -164,7 +144,7 @@ fn connected_3_3() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -189,7 +169,7 @@ fn connected_3_4() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -217,7 +197,7 @@ fn connected_3_5() -> Result<(), intersect2d::Error> {
     let _l = to_lines(&_l);
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(_l.iter())?
+        .with_ref_lines(_l.iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -253,7 +233,7 @@ fn connected_3_6() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     //No result!
@@ -275,7 +255,7 @@ fn connected_3_7() -> Result<(), intersect2d::Error> {
     let _l = to_lines(&_l);
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
-        .with_lines(_l.iter())?
+        .with_ref_lines(_l.iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -362,7 +342,7 @@ fn chevron_1() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -389,7 +369,7 @@ fn chevron_2() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -438,7 +418,7 @@ fn chevron_3() -> Result<(), intersect2d::Error> {
     let _l = to_lines(&_l);
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(_l.iter())?
+        .with_ref_lines(_l.iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -489,7 +469,7 @@ fn connected_5_1() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_lines(to_lines(&_l).into_iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -545,7 +525,7 @@ fn connected_7_1() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -595,7 +575,7 @@ fn connected_7_2() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
@@ -663,7 +643,7 @@ fn complex_1() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();

@@ -73,7 +73,7 @@ fn large_test_1() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
 
@@ -499,7 +499,7 @@ fn large_test_2() -> Result<(), intersect2d::Error> {
     ];
     let result = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
-        .with_lines(to_lines(&_l).iter())?
+        .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
     let mut iter = result.iter();
 

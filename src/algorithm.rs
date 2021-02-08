@@ -559,7 +559,65 @@ where
     /// Add data to the input lines.
     /// Sort the end point according to the order of SiteEventKey.
     /// Populate the event queue
-    pub fn with_lines<'a, I>(&mut self, input_iter: I) -> Result<&mut Self, super::Error>
+    /// Todo: this duplicates functionality of 'with_ref_lines()', try to consolidate..
+    pub fn with_lines<I>(&mut self, input_iter: I) -> Result<&mut Self, super::Error>
+    where
+        I: Iterator<Item = geo::Line<T>>,
+    {
+        let mut site_events = self.site_events.take().unwrap();
+
+        for (index, mut aline) in input_iter.enumerate() {
+            if !(aline.start.x.is_finite()
+                && aline.start.y.is_finite()
+                && aline.end.x.is_finite()
+                && aline.end.y.is_finite())
+            {
+                return Err(super::Error::InvalidData);
+            }
+
+            // Re-arrange so that:
+            // SiteEvent.pos.start < SiteEvent.pos.end (primary ordering: pos.y, secondary: pos.x)
+            if !(SiteEventKey { pos: aline.start }).lt(&(SiteEventKey { pos: aline.end })) {
+                std::mem::swap(&mut aline.start, &mut aline.end);
+            };
+
+            self.lines.push(aline);
+
+            let key_start = SiteEventKey { pos: aline.start };
+            let key_end = SiteEventKey { pos: aline.end };
+
+            // start points goes into the site_event::add list
+            if let Some(mut event) = site_events.get_mut(&key_start) {
+                let mut lower = event.add.take().map_or(Vec::<usize>::new(), identity);
+                lower.push(index);
+                event.add = Some(lower);
+            } else {
+                let event = SiteEvent::<T>::with_add(&[index]);
+                let _ = site_events.insert(key_start, event);
+            }
+
+            // end points goes into the site_event::drop list
+            if let Some(mut event) = site_events.get_mut(&key_end) {
+                let mut upper = event.drop.take().map_or(Vec::<usize>::new(), identity);
+                upper.push(index);
+                event.drop = Some(upper);
+            } else {
+                let event = SiteEvent::<T>::with_drop(&[index]);
+                let _ = site_events.insert(key_end, event);
+            }
+        }
+
+        self.site_events = Some(site_events);
+        #[cfg(feature = "console_trace")]
+        self.debug();
+        Ok(self)
+    }
+
+    /// Add data to the input lines.
+    /// Sort the end point according to the order of SiteEventKey.
+    /// Populate the event queue
+    /// TODO: is this worth keeping? AlgorithmData always keeps copies of the input geometry anyways
+    pub fn with_ref_lines<'a, I>(&mut self, input_iter: I) -> Result<&mut Self, super::Error>
     where
         T: 'a,
         I: Iterator<Item = &'a geo::Line<T>>,

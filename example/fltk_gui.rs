@@ -726,7 +726,7 @@ fn add_data(data: AlgoType) -> Result<(), Error> {
         [735, 105, 415, 586],
         [415, 586, 134, 520],
     ];
-    data_b.0.with_lines(to_lines(&_l).iter())?;
+    data_b.0.with_ref_lines(to_lines(&_l).iter())?;
     data_b.0.with_ignore_end_point_intersections(true)?;
     Ok(())
 }

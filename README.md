@@ -67,10 +67,25 @@ let _l = vec![
 ];
 let results = AlgorithmData::<f64>::default()
     .with_ignore_end_point_intersections(false)?
-    .with_lines(_l.iter())?
+    .with_lines(_l.into_iter())?
     .compute()?;
 for (p, l) in results.iter() {
     println!("Intersection @{:?} Involved lines:{:?}", p, l);
+}
+```
+
+Detection of self-intersecting geo::LineString:
+```rust
+let coords = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
+let line_string: geo::LineString<f32> = coords.into_iter().collect();
+
+let result = AlgorithmData::<f32>::default()
+    .with_ignore_end_point_intersections(true)?
+    .with_stop_at_first_intersection(true)?
+    .with_lines(line_string.lines())?
+    .compute()?;
+for (p, l) in result.iter() {
+    println!("Intersection detected @{:?} Involved lines:{:?}", p, l);
 }
 ```
 ## Todo
