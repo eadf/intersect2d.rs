@@ -79,6 +79,7 @@ Detection of self-intersecting geo::LineString:
 let coords = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
 let line_string: geo::LineString<f32> = coords.into_iter().collect();
 
+// Obviously this example only makes sense for long LinesStrings.
 let result = AlgorithmData::<f32>::default()
     .with_ignore_end_point_intersections(true)?
     .with_stop_at_first_intersection(true)?
@@ -88,6 +89,7 @@ for (p, l) in result.iter() {
     println!("Intersection detected @{:?} Involved lines:{:?}", p, l);
 }
 ```
+
 ## Todo
 - [x] Error handling
 - [ ] Benchmark and optimize
