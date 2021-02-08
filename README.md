@@ -4,7 +4,7 @@
 [![Documentation](https://docs.rs/intersect2d/badge.svg)](https://docs.rs/intersect2d)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)
-[![dependency status](https://deps.rs/crate/intersect2d/0.1.2/status.svg)](https://deps.rs/crate/intersect2d/0.1.2)
+[![dependency status](https://deps.rs/crate/intersect2d/0.2.0/status.svg)](https://deps.rs/crate/intersect2d/0.2.0)
 # intersect2d
 After watching [Philipp Kindermann's](https://www.youtube.com/watch?v=I9EsN2DTnN8) excellent sweep-line 
 videos I think I finally understand how this algorithm works.
@@ -55,23 +55,26 @@ Sweep-line API example:
 use geo;
 use intersect2d::algorithm::AlgorithmData;
 
-let _l = vec!(geo::Line::new(geo::Coordinate{x:200.,y:200.},geo::Coordinate{x:350.,y:300.}),
-              geo::Line::new(geo::Coordinate{x:400.,y:200.},geo::Coordinate{x:250.,y:300.}));
-if let Some(results) = {
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(false);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    ad.take_results()
-} {
-    for (p,l) in results.iter() {
-        println!("Intersection @{:?} Involved lines:{:?}", p, l);
-    }
+let _l = vec![
+    geo::Line::new(
+        geo::Coordinate { x: 200., y: 200. },
+        geo::Coordinate { x: 350., y: 300. },
+    ),
+    geo::Line::new(
+        geo::Coordinate { x: 400., y: 200. },
+        geo::Coordinate { x: 250., y: 300. },
+    ),
+];
+let results = AlgorithmData::<f64>::default()
+    .with_ignore_end_point_intersections(false)?
+    .with_lines(_l.iter())?
+    .compute()?;
+for (p, l) in results.iter() {
+    println!("Intersection @{:?} Involved lines:{:?}", p, l);
 }
 ```
 ## Todo
-- [ ] Error handling
+- [x] Error handling
 - [ ] Benchmark and optimize
-- [ ] Stable overlapping co-linear line detection 
-
+- [ ] Stable overlapping co-linear line detection
 

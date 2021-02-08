@@ -2,7 +2,7 @@ use approx;
 use geo::algorithm::intersects::Intersects;
 use intersect2d::algorithm::{AlgorithmData, SiteEventKey};
 #[allow(unused_imports)]
-use intersect2d::{intersect, scale_to_coordinate, ulps_eq, to_lines};
+use intersect2d::{intersect, scale_to_coordinate, to_lines, ulps_eq};
 use num_traits::Float;
 
 #[allow(dead_code)]
@@ -16,31 +16,26 @@ where
 }
 
 #[test]
-fn two_connected_1() {
+fn two_connected_1() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 2] = [[200., 200., 300., 300.], [400., 200., 300., 300.]];
-    let _l = to_lines(&_l);
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     //No result!
     assert!(iter.next().is_none());
+    Ok(())
 }
 
 #[test]
-fn two_connected_2() {
+fn two_connected_2() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 2] = [[200., 200., 300., 300.], [400., 200., 300., 300.]];
-    let _l = to_lines(&_l);
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(false);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(false)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(300., 300.);
     let lines = [0, 1];
@@ -49,48 +44,48 @@ fn two_connected_2() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 #[test]
-fn two_connected_3() {
+fn two_connected_3() -> Result<(), intersect2d::Error> {
     // README.md example
     // use geo;
     // use intersect2d::algorithm::AlgorithmData;
-    let _l = vec!(geo::Line::new(geo::Coordinate{x:200., y:200.},geo::Coordinate{x:350., y:300.}),
-                  geo::Line::new(geo::Coordinate{x:400., y:200.},geo::Coordinate{x:250., y:300.}));
-    if let Some(results) = {
-        let mut ad = AlgorithmData::<f64>::default();
-        ad.with_ignore_end_point_intersections(false);
-        ad.with_lines(_l.iter());
-        ad.compute(false);
-        ad.take_results()
-    } {
-        // i'd like to use for .... in ad.get_results().iter().flatten() {
-        // but it does not work for some reason
-        for (p,l) in results.iter() {
-            println!("Intersection @{:?} Involved lines:{:?}", p, l);
-        }
+    let _l = vec![
+        geo::Line::new(
+            geo::Coordinate { x: 200., y: 200. },
+            geo::Coordinate { x: 350., y: 300. },
+        ),
+        geo::Line::new(
+            geo::Coordinate { x: 400., y: 200. },
+            geo::Coordinate { x: 250., y: 300. },
+        ),
+    ];
+    let results = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(false)?
+        .with_lines(_l.iter())?
+        .compute()?;
+    for (p, l) in results.iter() {
+        println!("Intersection @{:?} Involved lines:{:?}", p, l);
     }
-    //panic!();
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn connected_3_1() {
+fn connected_3_1() -> Result<(), intersect2d::Error> {
     // this is test connected_3_1
     let _l: [[f64; 4]; 3] = [
         [200., 200., 300., 300.],
         [400., 200., 300., 300.],
         [200., 300., 300., 300.],
     ];
-    let _l = to_lines(&_l);
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(false);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(false)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(300., 300.);
     let lines = [0, 1, 2];
@@ -99,46 +94,79 @@ fn connected_3_1() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
-
-//#[ignore]
 #[test]
-fn connected_3_2() {
-    // this is test connected_3_2
+fn connected_3_1_copy() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 3] = [
         [200., 200., 300., 300.],
         [400., 200., 300., 300.],
         [200., 300., 300., 300.],
     ];
     let _l = to_lines(&_l);
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
-    //No result!
-    assert!(iter.next().is_none());
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(false)?
+        .with_lines(_l.iter())?
+        .compute()?;
+    let mut iter = result.iter();
+    let (k, i) = iter.next().unwrap();
+    let intersection = SiteEventKey::new(300., 300.);
+    let lines = [0, 1, 2];
+    assert_eq!(&intersection, k);
+    assert_eq!(
+        i.iter().collect::<Vec<&usize>>().sort(),
+        lines.iter().collect::<Vec<&usize>>().sort()
+    );
+    assert_eq!(&intersection, k);
+    assert_eq!(
+        i.iter().collect::<Vec<&usize>>().sort(),
+        lines.iter().collect::<Vec<&usize>>().sort()
+    );
+    for lineid_1 in i.iter().rev().skip(1) {
+        for lineid_2 in i.iter().skip(1) {
+            if lineid_1 == lineid_2 {
+                continue;
+            }
+            println!("line1:{} line2:{}", lineid_1, lineid_2);
+            assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
+        }
+    }
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn connected_3_3() {
+fn connected_3_2() -> Result<(), intersect2d::Error> {
+    // this is test connected_3_2
+    let _l: [[f64; 4]; 3] = [
+        [200., 200., 300., 300.],
+        [400., 200., 300., 300.],
+        [200., 300., 300., 300.],
+    ];
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
+    //No result!
+    assert!(iter.next().is_none());
+    Ok(())
+}
+
+//#[ignore]
+#[test]
+fn connected_3_3() -> Result<(), intersect2d::Error> {
     // this is test connected_3_3
     let _l: [[f64; 4]; 3] = [
         [200., 200., 300., 300.],
         [400., 200., 300., 300.],
         [200., 300., 400., 300.],
     ];
-    let _l = to_lines(&_l);
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(300., 300.);
     let lines = [0, 1, 2];
@@ -147,25 +175,23 @@ fn connected_3_3() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn connected_3_4() {
+fn connected_3_4() -> Result<(), intersect2d::Error> {
     // this is test connected_3_4
     let _l: [[f64; 4]; 3] = [
         [200., 200., 300., 300.],
         [400., 200., 300., 300.],
         [200., 300., 400., 300.],
     ];
-    let _l = to_lines(&_l);
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(false);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(false)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(300., 300.);
     let lines = [0, 1, 2];
@@ -174,10 +200,11 @@ fn connected_3_4() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 #[test]
-fn connected_3_5() {
+fn connected_3_5() -> Result<(), intersect2d::Error> {
     // this is test connected_3_5
     let _l: [[f64; 4]; 6] = [
         [200., 200., 300., 300.],
@@ -187,14 +214,12 @@ fn connected_3_5() {
         [400., 200., 300., 300.],
         [200., 300., 400., 300.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
     let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(_l.iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(300., 300.);
     let lines = [0, 1, 2, 3, 4, 5];
@@ -212,10 +237,11 @@ fn connected_3_5() {
             assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
         }
     }
+    Ok(())
 }
 
 #[test]
-fn connected_3_6() {
+fn connected_3_6() -> Result<(), intersect2d::Error> {
     // this is test connected_3_6
     let _l: [[f64; 4]; 6] = [
         [200., 200., 300., 300.],
@@ -225,20 +251,18 @@ fn connected_3_6() {
         [400., 200., 300., 300.],
         [200., 300., 300., 300.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     //No result!
     assert!(iter.next().is_none());
+    Ok(())
 }
 
 #[test]
-fn connected_3_7() {
+fn connected_3_7() -> Result<(), intersect2d::Error> {
     // this is test connected_3_7
     let _l: [[f64; 4]; 6] = [
         [200., 200., 300., 300.],
@@ -248,14 +272,12 @@ fn connected_3_7() {
         [400., 200., 300., 300.],
         [200., 300., 300., 300.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(false);
     let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(false)?
+        .with_lines(_l.iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(200., 200.);
     let lines = [0, 3];
@@ -324,11 +346,12 @@ fn connected_3_7() {
             assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
         }
     }
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn chevron_1() {
+fn chevron_1() -> Result<(), intersect2d::Error> {
     // this is chevron_1
     let _l: [[f64; 4]; 5] = [
         [200., 200., 300., 300.],
@@ -337,14 +360,11 @@ fn chevron_1() {
         [400., 250., 290., 350.],
         [200., 250., 300., 400.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(300., 340.9090909090909);
     let lines = [2, 3];
@@ -353,11 +373,12 @@ fn chevron_1() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn chevron_2() {
+fn chevron_2() -> Result<(), intersect2d::Error> {
     // this is chevron_2
     let _l: [[f64; 4]; 5] = [
         [200., 200., 300., 300.],
@@ -366,14 +387,11 @@ fn chevron_2() {
         [400., 250., 290., 350.],
         [200., 250., 300., 400.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(false);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(false)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(200., 250.);
     let lines = [2, 4];
@@ -398,11 +416,12 @@ fn chevron_2() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn chevron_3() {
+fn chevron_3() -> Result<(), intersect2d::Error> {
     // this is chevron_3
     let _l: [[f64; 4]; 10] = [
         [200., 200., 300., 300.],
@@ -416,14 +435,12 @@ fn chevron_3() {
         [400., 250., 290., 350.],
         [200., 250., 300., 400.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
     let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(_l.iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(300., 340.9090909090909);
     let lines = [2, 3, 7, 8];
@@ -441,11 +458,12 @@ fn chevron_3() {
             assert!(_l[*lineid_1].intersects(&_l[*lineid_2]));
         }
     }
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn connected_5_1() {
+fn connected_5_1() -> Result<(), intersect2d::Error> {
     // this is connected_5_1
     let _l: [[f64; 4]; 5] = [
         [300., 300., 500., 300.],
@@ -469,14 +487,11 @@ fn connected_5_1() {
             743.9231012048832,
         ],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(340.41232037028954, 300.);
     let lines = [0, 2];
@@ -509,11 +524,12 @@ fn connected_5_1() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn connected_7_1() {
+fn connected_7_1() -> Result<(), intersect2d::Error> {
     // this is connected_7_1
     let _l: [[f64; 4]; 5] = [
         [200., 200., 300., 300.],
@@ -527,14 +543,11 @@ fn connected_7_1() {
             385.5050358314172,
         ],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(false);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(false)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(300., 300.);
     let lines = [0, 1];
@@ -559,11 +572,12 @@ fn connected_7_1() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn connected_7_2() {
+fn connected_7_2() -> Result<(), intersect2d::Error> {
     // this is connected_7_2
     let _l: [[f64; 4]; 7] = [
         [200., 200., 300., 300.],
@@ -579,14 +593,11 @@ fn connected_7_2() {
             385.5050358314172,
         ],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(400., 300.);
     let lines = [5, 6];
@@ -627,10 +638,11 @@ fn connected_7_2() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 #[test]
-fn complex_1() {
+fn complex_1() -> Result<(), intersect2d::Error> {
     // this is complex_1
     let _l: [[f64; 4]; 15] = [
         [10., 5., 78., 12.],
@@ -649,14 +661,11 @@ fn complex_1() {
         [440., 320., 400., 520.],
         [480., 320., 360., 520.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(36.946208836282665, 54.39458572600492);
     let lines = [2, 3];
@@ -756,4 +765,5 @@ fn complex_1() {
 
     // uses a true n^2 'algorithm'
     //let _bf = brute_force(&_l);
+    Ok(())
 }

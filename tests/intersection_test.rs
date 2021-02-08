@@ -3,8 +3,9 @@ use core::fmt;
 use geo::algorithm::intersects::Intersects;
 
 #[allow(unused_imports)]
-use intersect2d::{intersect, scale_to_coordinate, ulps_eq, to_lines, Intersection};
+use intersect2d::{intersect, scale_to_coordinate, to_lines, ulps_eq, Intersection};
 //use intersections_2d::algorithm::{AlgorithmData, SiteEventKey};
+#[allow(unused_imports)]
 use num_traits::{Float, ToPrimitive};
 
 #[allow(dead_code)]

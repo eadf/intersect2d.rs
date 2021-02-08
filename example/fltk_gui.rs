@@ -45,15 +45,25 @@ licenses /why-not-lgpl.html>.
 
 use fltk::*;
 use intersect2d::algorithm::AlgorithmData;
-use intersect2d::{scale_to_coordinate, to_lines};
+use intersect2d::{scale_to_coordinate, to_lines, Error};
 use itertools::Itertools;
-use num_traits::{Float, ToPrimitive};
+//use num_traits::{Float, ToPrimitive};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 const DRAW_TEXT: bool = true;
 
-fn main() {
+/// combining iterative and non-iterative compute() complicates things a bit..
+type AlgoType = Rc<
+    RefCell<(
+        AlgorithmData<f64>,
+        Option<
+            Result<rb_tree::RBMap<intersect2d::algorithm::SiteEventKey<f64>, Vec<usize>>, Error>,
+        >,
+    )>,
+>;
+
+fn main() -> Result<(), Error> {
     let app = app::App::default();
     let mut wind = window::Window::default()
         .with_size(800, 800)
@@ -63,10 +73,10 @@ fn main() {
     wind.set_color(Color::Black);
     wind.end();
     wind.show();
-    let alg_data = Rc::from(RefCell::from(AlgorithmData::<f64>::default()));
+    let alg_data: AlgoType = Rc::from(RefCell::from((AlgorithmData::<f64>::default(), None)));
 
     let alg_data_c = alg_data.clone();
-    add_data(alg_data_c);
+    add_data(alg_data_c)?;
 
     let alg_data_c = alg_data.clone();
     // This is called whenever the window is drawn and redrawn (in the event loop)
@@ -76,7 +86,7 @@ fn main() {
         draw::set_draw_color(Color::White);
         if DRAW_TEXT {
             let mut astring = String::from("'ignore_end_point_intersections' is ");
-            if alg_data_b.ignore_end_point_intersections {
+            if alg_data_b.0.ignore_end_point_intersections {
                 astring.push_str("true");
             } else {
                 astring.push_str("false");
@@ -90,11 +100,11 @@ fn main() {
         // draw sweep-line
         draw::set_draw_color(Color::Blue);
 
-        let sweepline = alg_data_b.get_sweepline_pos();
+        let sweepline = alg_data_b.0.get_sweepline_pos();
         draw::draw_line(0, sweepline.y as i32, 800, sweepline.y as i32);
 
         draw::set_draw_color(Color::White);
-        for (line_index, line) in alg_data_b.get_lines().iter().enumerate() {
+        for (line_index, line) in alg_data_b.0.get_lines().iter().enumerate() {
             if line.end.y > sweepline.y {
                 draw::set_draw_color(Color::Green);
             } else {
@@ -117,18 +127,23 @@ fn main() {
         }
         // draw end points not handled yet.
         draw::set_draw_color(Color::Green);
-        for (k, _v) in alg_data_b.get_site_events().as_ref().unwrap().iter() {
+        for (k, _v) in alg_data_b.0.get_site_events().as_ref().unwrap().iter() {
             draw::draw_circle(k.pos.x, k.pos.y, 2.0);
         }
         // draw found intersections
         draw::set_draw_color(Color::Yellow);
-        if let Some(r) = alg_data_b.get_results() {
+        if let Some(r) = alg_data_b.0.get_results() {
+            for (k, _v) in r.iter() {
+                draw::draw_circle(k.pos.x, k.pos.y, 2.0);
+            }
+        }
+        if let Some(Ok(r)) = alg_data_b.1.as_ref() {
             for (k, _v) in r.iter() {
                 draw::draw_circle(k.pos.x, k.pos.y, 2.0);
             }
         }
         // draw found intersections, not reported yet
-        for (k, _v) in alg_data_b.get_site_events().as_ref().unwrap().iter() {
+        for (k, _v) in alg_data_b.0.get_site_events().as_ref().unwrap().iter() {
             if _v.get_intersections().is_some() {
                 draw::draw_circle(k.pos.x, k.pos.y, 2.0);
             }
@@ -136,8 +151,8 @@ fn main() {
 
         // draw active lines
         draw::set_draw_color(Color::Red);
-        for line_index in alg_data_b.get_active_lines().iter().flatten() {
-            let line = alg_data_b.get_lines()[*line_index];
+        for line_index in alg_data_b.0.get_active_lines().iter().flatten() {
+            let line = alg_data_b.0.get_lines()[*line_index];
             draw::draw_line(
                 line.start.x as i32,
                 line.start.y as i32,
@@ -170,10 +185,22 @@ fn main() {
                     let alg_data_c = Rc::clone(&alg_data_c);
                     let mut data = alg_data_c.borrow_mut();
                     if app_event_txt == " " {
-                        data.compute(true)
+                        match data.0.compute_iterative() {
+                            Ok(done) => {
+                                if done {
+                                    data.1 = Some(data.0.take_results());
+                                }
+                                done
+                            }
+                            Err(some_error) => {
+                                data.1 = Some(Err(some_error));
+                                true
+                            }
+                        }
                     } else {
-                        // app_event_txt == "c"{
-                        data.compute(false)
+                        // app_event_txt == "c"
+                        data.1 = Some(data.0.compute());
+                        true
                     }
                 };
 
@@ -198,9 +225,10 @@ fn main() {
     while app.wait() {
         wind.redraw();
         if !cfg!(windows) {
-            std::thread::sleep(std::time::Duration::from_millis(1));
+            std::thread::sleep(std::time::Duration::from_millis(10));
         }
     }
+    Ok(())
 }
 
 /// draws a line pivoting around (x,y) with 'angle' in degrees
@@ -245,12 +273,12 @@ fn float_to_string(value: f64) -> String {
 
 /// generate test code from result. Be careful..
 #[allow(dead_code)]
-fn generate_test(data: Rc<RefCell<AlgorithmData<f64>>>) {
+fn generate_test(data: AlgoType) {
     let data = data.borrow_mut();
 
-    let lines = data.get_lines().iter().count();
+    let lines = data.0.get_lines().iter().count();
     println!("let _l:[[f64;4];{}]=[", lines);
-    for (i, l) in data.get_lines().iter().enumerate() {
+    for (i, l) in data.0.get_lines().iter().enumerate() {
         print!(
             "    [{},{},{},{}]",
             float_to_string(l.start.x),
@@ -264,20 +292,19 @@ fn generate_test(data: Rc<RefCell<AlgorithmData<f64>>>) {
             println!(",");
         }
     }
-    println!("let mut ad = AlgorithmData::<f64>::default();");
-    if data.ignore_end_point_intersections {
-        println!("ad.with_ignore_end_point_intersections(true);");
-    } else {
-        println!("ad.with_ignore_end_point_intersections(false);");
-    }
     println!("let _l = to_lines(&_l);");
-    println!("ad.with_lines(_l.iter());");
-    println!("ad.compute(false);");
+    println!("let result = AlgorithmData::<f64>::default()");
+    if data.0.ignore_end_point_intersections {
+        println!(" .with_ignore_end_point_intersections(true)?");
+    } else {
+        println!(" .with_ignore_end_point_intersections(false)?");
+    }
 
-    if let Some(results) = data.get_results() {
-        println!("assert!(ad.get_results().is_some());");
-        println!("let _result = ad.get_results().as_ref().unwrap();");
-        println!("let mut iter = ad.get_results().as_ref().unwrap().iter();");
+    println!(" .with_lines(_l.iter())?");
+    println!(" .compute()?;");
+
+    if let Some(Ok(results)) = data.1.as_ref() {
+        println!("let mut iter = result.iter();");
 
         if results.iter().count() == 0 {
             println!("//No result!");
@@ -298,7 +325,6 @@ fn generate_test(data: Rc<RefCell<AlgorithmData<f64>>>) {
             println!("];");
             println!("assert_eq!(&intersection, k);");
             println!("assert_eq!( i.iter().collect::<Vec<&usize>>().sort(), lines.iter().collect::<Vec<&usize>>().sort());");
-            println!("];");
             println!("assert_eq!(&intersection, k);");
             println!("assert_eq!( i.iter().collect::<Vec<&usize>>().sort(), lines.iter().collect::<Vec<&usize>>().sort());");
             println!("for lineid_1 in i.iter().rev().skip(1) {{");
@@ -310,16 +336,16 @@ fn generate_test(data: Rc<RefCell<AlgorithmData<f64>>>) {
             println!("}}");
         }
     }
-    println!();
+    println!("Ok(())");
 }
 
-fn print_results(data: Rc<RefCell<AlgorithmData<f64>>>) {
+fn print_results(data: AlgoType) {
     let data = data.borrow_mut();
 
-    if let Some(results) = data.get_results() {
-        let intersections = results.iter().map(|x| x.1.iter()).flatten().count() / 2;
+    if let Some(Ok(data_1)) = data.1.as_ref() {
+        let intersections = data_1.iter().map(|x| x.1.iter()).flatten().count() / 2;
 
-        for r in results.iter() {
+        for r in data_1.iter() {
             print!("Intersection @({:.4},{:.4}) lines:", r.0.pos.x, r.0.pos.y);
             for l in r.1.iter() {
                 print!("{},", l);
@@ -328,27 +354,20 @@ fn print_results(data: Rc<RefCell<AlgorithmData<f64>>>) {
         }
         println!("In total {} unique intersection points.", intersections);
 
-        let size = data.get_lines().len();
+        let size = data.0.get_lines().len();
 
         println!(
-            "Made {} calls to intersect() for {} line segments. Brute force approach would need at least {} calls",
-            data.get_intersection_calls(),
-            size, size*size/2
-        );
+                "Made {} calls to intersect() for {} line segments. Brute force approach would need at least {} calls",
+                data.0.get_intersection_calls(),
+                size, size*size/2
+            );
     }
 }
 
 /// Add data to the input lines. Populate the event queue
-fn add_data(data: Rc<RefCell<AlgorithmData<f64>>>) {
+fn add_data(data: AlgoType) -> Result<(), Error> {
     let mut data_b = data.borrow_mut();
 
-    /*let _l: [[i32; 4]; 1] = [[300, 300, 500, 300]];
-    let mut _l = to_lines(&_l);
-    _l.push(pivot(400.0, 350.0, 400.0, 100.0, 20.0));
-    _l.push(pivot(400.0, 350.0, 400.0, 100.0, 40.0));
-    _l.push(pivot(400.0, 350.0, 400.0, 100.0, 60.0));
-    _l.push(pivot(400.0, 350.0, 400.0, 100.0, 80.0));
-    */
     let _l: [[i32; 4]; 356] = [
         [402, 20, 395, 20],
         [408, 23, 402, 20],
@@ -707,7 +726,7 @@ fn add_data(data: Rc<RefCell<AlgorithmData<f64>>>) {
         [735, 105, 415, 586],
         [415, 586, 134, 520],
     ];
-    let mut _l = to_lines(&_l);
-    data_b.with_lines(_l.iter());
-    data_b.with_ignore_end_point_intersections(true);
+    data_b.0.with_lines(to_lines(&_l).iter())?;
+    data_b.0.with_ignore_end_point_intersections(true)?;
+    Ok(())
 }

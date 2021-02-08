@@ -349,6 +349,7 @@ where
     drop: Option<Vec<usize>>,
     add: Option<Vec<usize>>,
     intersection: Option<Vec<usize>>,
+    #[doc(hidden)]
     pd: PhantomData<T>,
 }
 
@@ -357,16 +358,6 @@ where
     T: Float + approx::UlpsEq + geo::CoordNum,
     T::Epsilon: Copy,
 {
-    /*
-    pub(crate) fn new() -> Self {
-        Self {
-            drop: None,
-            add: None,
-            intersection: None,
-            pd: PhantomData,
-        }
-    }*/
-
     pub(crate) fn with_intersection(i: &[usize]) -> Self {
         Self {
             drop: None,
@@ -453,22 +444,24 @@ where
     // Stop when first intersection is found
     stop_at_first_intersection: bool,
     // Allow start&end points to intersect
-    // i.e. don't report them as an intersection.
-    // An endpoint intersecting another line will still be counted as an intersection.
+    // i.e. don't report them as an intersections.
+    // An endpoint intersecting any other point of another line will still be
+    // counted as an intersection.
     pub ignore_end_point_intersections: bool,
-    // the unhandled events
+    // The unhandled events
     site_events: Option<rb_tree::RBMap<SiteEventKey<T>, SiteEvent<T>>>,
-    // the lines we are considering at any given point in time
+    // The lines we are considering at any given point in time
     active_lines: Option<FnvHashSet<usize>>,
-    // the input geometry. These lines are re-arranged so that Line.start.y <= Line.end.y
-    lines: Vec<geo::Line<T>>,
     // A list of intersection points and the line segments involved in each intersection
     result: Option<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>>,
     intersection_calls: usize,
-    // the 'best' lines surrounding the event point but not directly connected to the point.
+    // The 'best' lines surrounding the event point but not directly connected to the point.
     neighbour_priority: Option<MinMax<T>>,
-    // the 'best' lines directly connected to the event point.
-    active_priority: Option<MinMaxSlope<T>>,
+    // The 'best' lines directly connected to the event point.
+    connected_priority: Option<MinMaxSlope<T>>,
+    // The input geometry. These lines are re-arranged so that Line.start.y <= Line.end.y
+    // These are never changed while the algorithm is running.
+    lines: Vec<geo::Line<T>>,
 }
 
 impl<T> Default for AlgorithmData<T>
@@ -496,7 +489,7 @@ where
             active_lines: Some(FnvHashSet::default()),
             intersection_calls: 0,
             neighbour_priority: Some(MinMax::new()),
-            active_priority: Some(MinMaxSlope::new()),
+            connected_priority: Some(MinMaxSlope::new()),
         }
     }
 }
@@ -525,8 +518,14 @@ where
     }
 
     // This removes the results from the AlgorithmData structure
-    pub fn take_results(&mut self) -> Option<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>> {
-        self.result.take()
+    pub fn take_results(
+        &mut self,
+    ) -> Result<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>, super::Error> {
+        if let Some(rv) = self.result.take() {
+            Ok(rv)
+        } else {
+            Err(super::Error::ResultsAlreadyTaken)
+        }
     }
 
     pub fn get_site_events(&self) -> &Option<rb_tree::RBMap<SiteEventKey<T>, SiteEvent<T>>> {
@@ -541,29 +540,43 @@ where
         self.intersection_calls
     }
 
-    pub fn with_stop_at_first_intersection(&mut self, value: bool) {
+    pub fn with_stop_at_first_intersection(
+        &mut self,
+        value: bool,
+    ) -> Result<&mut Self, super::Error> {
         self.stop_at_first_intersection = value;
+        Ok(self)
     }
 
-    pub fn with_ignore_end_point_intersections(&mut self, value: bool) {
+    pub fn with_ignore_end_point_intersections(
+        &mut self,
+        value: bool,
+    ) -> Result<&mut Self, super::Error> {
         self.ignore_end_point_intersections = value;
+        Ok(self)
     }
 
     /// Add data to the input lines.
     /// Sort the end point according to the order of SiteEventKey.
     /// Populate the event queue
-    /// Todo: add error when data contains NaN (for example)
-    pub fn with_lines<'a, I>(&mut self, data: I)
+    pub fn with_lines<'a, I>(&mut self, input_iter: I) -> Result<&mut Self, super::Error>
     where
         T: 'a,
         I: Iterator<Item = &'a geo::Line<T>>,
     {
         let mut site_events = self.site_events.take().unwrap();
 
-        for (index, aline) in data.enumerate() {
+        for (index, aline) in input_iter.enumerate() {
+            if !(aline.start.x.is_finite()
+                && aline.start.y.is_finite()
+                && aline.end.x.is_finite()
+                && aline.end.y.is_finite())
+            {
+                return Err(super::Error::InvalidData);
+            }
+
             // Re-arrange so that:
             // SiteEvent.pos.start < SiteEvent.pos.end (primary ordering: pos.y, secondary: pos.x)
-
             let aline =
                 if (SiteEventKey { pos: aline.start }).lt(&(SiteEventKey { pos: aline.end })) {
                     geo::Line {
@@ -606,6 +619,7 @@ where
         self.site_events = Some(site_events);
         #[cfg(feature = "console_trace")]
         self.debug();
+        Ok(self)
     }
 
     ///
@@ -650,10 +664,23 @@ where
         }
     }
 
+    /// handles input event, returns true when done
+    /// If interactive is set, the method will handle only one event for each call
+    pub fn compute(&mut self) -> Result<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>, super::Error> {
+        let _ = self._compute(false);
+        self.take_results()
+    }
+
+    /// handles input event, returns true when done
+    /// You will have call take_results() if the method returns true
+    pub fn compute_iterative(&mut self) -> Result<bool, super::Error> {
+        Ok(self._compute(true))
+    }
+
     #[allow(unused_assignments)]
     /// handles input event, returns true when done
     /// If interactive is set, the method will handle only one event for each call
-    pub fn compute(&mut self, interactive: bool) -> bool {
+    fn _compute(&mut self, interactive: bool) -> bool {
         if self.stop_at_first_intersection && self.result.is_some() {
             return true;
         }
@@ -664,7 +691,7 @@ where
         let mut site_events = self.site_events.take().unwrap();
         let mut result = self.result.take().unwrap();
         let mut neighbour_priority = self.neighbour_priority.take().unwrap();
-        let mut active_priority = self.active_priority.take().unwrap();
+        let mut connected_priority = self.connected_priority.take().unwrap();
 
         // return value
         let mut algorithm_is_done = false;
@@ -676,7 +703,7 @@ where
                     &event,
                     &mut active_lines,
                     &mut neighbour_priority,
-                    &mut active_priority,
+                    &mut connected_priority,
                     &mut site_events,
                     &mut result,
                 );
@@ -701,7 +728,7 @@ where
         self.active_lines = Some(active_lines);
         self.result = Some(result);
         self.neighbour_priority = Some(neighbour_priority);
-        self.active_priority = Some(active_priority);
+        self.connected_priority = Some(connected_priority);
         algorithm_is_done
     }
 
@@ -713,7 +740,7 @@ where
         event: &SiteEvent<T>,
         active_lines: &mut FnvHashSet<usize>,
         neighbour_priority: &mut MinMax<T>,
-        active_priority: &mut MinMaxSlope<T>,
+        connected_priority: &mut MinMaxSlope<T>,
         site_events: &mut rb_tree::RBMap<SiteEventKey<T>, SiteEvent<T>>,
         result: &mut rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>,
     ) {
@@ -863,22 +890,22 @@ where
                 );
             }
         } else {
-            active_priority.clear();
+            connected_priority.clear();
             for l in event.add.iter().flatten() {
-                active_priority.update_both(*l, &self.lines);
+                connected_priority.update_both(*l, &self.lines);
             }
             for l in event.intersection.iter().flatten() {
-                active_priority.update_both(*l, &self.lines);
+                connected_priority.update_both(*l, &self.lines);
             }
             #[cfg(feature = "console_trace")]
             println!(
-                "left active_priority candidates {:?}",
-                active_priority.candidates_left
+                "left connected_priority candidates {:?}",
+                connected_priority.candidates_left
             );
             #[cfg(feature = "console_trace")]
             println!(
-                "right active_priority candidates {:?}",
-                active_priority.candidates_right
+                "right connected_priority candidates {:?}",
+                connected_priority.candidates_right
             );
 
             if !neighbour_priority.slope.candidates_left.is_empty() {
@@ -890,7 +917,7 @@ where
 
                 self.find_new_events(
                     &neighbour_priority.slope.candidates_left,
-                    &active_priority.candidates_left,
+                    &connected_priority.candidates_left,
                     site_events,
                 );
             }
@@ -903,7 +930,7 @@ where
 
                 self.find_new_events(
                     &neighbour_priority.slope.candidates_right,
-                    &active_priority.candidates_right,
+                    &connected_priority.candidates_right,
                     site_events,
                 );
             }

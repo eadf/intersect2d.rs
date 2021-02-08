@@ -1,8 +1,8 @@
 use approx;
 use intersect2d::algorithm::{AlgorithmData, SiteEventKey};
 #[allow(unused_imports)]
-use intersect2d::{intersect, scale_to_coordinate, ulps_eq, to_lines, Intersection};
-use num_traits::{Float, ToPrimitive};
+use intersect2d::{intersect, scale_to_coordinate, to_lines, ulps_eq, Intersection};
+use num_traits::Float;
 
 #[allow(dead_code)]
 fn almost_equal<T>(x1: T, x2: T, y1: T, y2: T)
@@ -16,7 +16,7 @@ where
 
 //#[ignore]
 #[test]
-fn large_test_1() {
+fn large_test_1() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 52] = [
         [200., 200., 200., 400.],
         [200., 400., 400., 400.],
@@ -71,14 +71,12 @@ fn large_test_1() {
         [617., 342., 594., 427.],
         [675., 292., 617., 342.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
+
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(69.75440198728721, 130.2933440490977);
     let lines = [19, 27];
@@ -135,11 +133,12 @@ fn large_test_1() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }
 
 //#[ignore]
 #[test]
-fn large_test_2() {
+fn large_test_2() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 356] = [
         [395., 20., 402., 20.],
         [402., 20., 408., 23.],
@@ -498,14 +497,12 @@ fn large_test_2() {
         [735., 105., 415., 586.],
         [134., 520., 415., 586.],
     ];
-    let mut ad = AlgorithmData::<f64>::default();
-    ad.with_ignore_end_point_intersections(true);
-    let _l = to_lines(&_l);
-    ad.with_lines(_l.iter());
-    ad.compute(false);
-    assert!(ad.get_results().is_some());
-    let _result = ad.get_results().as_ref().unwrap();
-    let mut iter = ad.get_results().as_ref().unwrap().iter();
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_lines(to_lines(&_l).iter())?
+        .compute()?;
+    let mut iter = result.iter();
+
     let (k, i) = iter.next().unwrap();
     let intersection = SiteEventKey::new(694.1658119658119, 183.6581634889327);
     let lines = [76, 353];
@@ -634,4 +631,5 @@ fn large_test_2() {
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
+    Ok(())
 }

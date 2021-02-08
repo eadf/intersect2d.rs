@@ -51,17 +51,23 @@ licenses /why-not-lgpl.html>.
 #![deny(unused_imports)]
 
 use core::fmt;
-use num_traits::{Float, Zero, ToPrimitive};
+use num_traits::{Float, ToPrimitive, Zero};
 
 pub mod algorithm;
+
+#[derive(Debug)]
+pub enum Error {
+    InvalidData,
+    ResultsAlreadyTaken,
+}
 
 /// Utility function converting an array slice into a vec of Line
 #[allow(dead_code)]
 pub fn to_lines<U, T>(points: &[[U; 4]]) -> Vec<geo::Line<T>>
-    where
-        U: ToPrimitive + Copy,
-        T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
-        T::Epsilon: Copy,
+where
+    U: ToPrimitive + Copy,
+    T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
+    T::Epsilon: Copy,
 {
     let mut rv = Vec::with_capacity(points.len());
     for p in points.iter() {
@@ -178,51 +184,6 @@ where
         }
     }
 }
-
-/*impl<T> fmt::Display for Intersection<T> where
-    T: Float
-    + Zero
-    + fmt::Display
-    + geo::CoordNum
-    + PartialOrd
-    + approx::AbsDiffEq
-    + approx::UlpsEq,
-    T::Epsilon: Copy, {
-
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::OverLapping(a) => a.fmt(f),
-            Self::Intersection(a) => a.fmt(f),
-        }
-    }
-}*/
-
-/*
-#[inline(always)]
-fn max<T>(a:T,b:T) -> T where
-    T: Float
-    + Zero
-    + fmt::Display
-    + geo::CoordNum
-    + PartialOrd
-    + approx::AbsDiffEq
-    + approx::UlpsEq,
-    T::Epsilon: Copy,{
-    cmp::max(OrderedFloat(a), OrderedFloat(b) ).into_inner()
-}
-
-#[inline(always)]
-fn min<T>(a:T,b:T) -> T where
-    T: Float
-    + Zero
-    + fmt::Display
-    + geo::CoordNum
-    + PartialOrd
-    + approx::AbsDiffEq
-    + approx::UlpsEq,
-    T::Epsilon: Copy,{
-    cmp::min(OrderedFloat(a), OrderedFloat(b) ).into_inner()
-}*/
 
 /// Get any intersection point between line segments.
 /// Note that this function always detects endpoint-to-endpoint intersections.
