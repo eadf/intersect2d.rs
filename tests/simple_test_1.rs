@@ -747,3 +747,28 @@ fn complex_1() -> Result<(), intersect2d::Error> {
     //let _bf = brute_force(&_l);
     Ok(())
 }
+
+//#[ignore]
+#[test]
+fn a_test() -> Result<(), intersect2d::Error> {
+    let _l: [[f32; 4]; 6] = [
+        [651.3134, 410.21536, 335.7384, 544.54614],
+        [335.7384, 544.54614, 154.29922, 363.10654],
+        [154.29922, 363.10654, 425.06284, 255.50153],
+        [425.06284, 255.50153, 651.1434, 387.16595],
+        [651.1434, 387.16595, 250.0, 300.0],
+        [250.0, 300.0, 651.3134, 410.21536],
+    ];
+    let _l: Vec<[i32; 4]> = _l
+        .iter()
+        .map(|x| [x[0] as i32, x[1] as i32, x[2] as i32, x[3] as i32])
+        .collect();
+
+    let result = AlgorithmData::<f64>::default()
+        .with_ignore_end_point_intersections(true)?
+        .with_ref_lines(to_lines(&_l).iter())?
+        .compute()?;
+
+    assert_eq!(result.len(), 2);
+    Ok(())
+}

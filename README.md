@@ -4,7 +4,7 @@
 [![Documentation](https://docs.rs/intersect2d/badge.svg)](https://docs.rs/intersect2d)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)
-[![dependency status](https://deps.rs/crate/intersect2d/0.2.0/status.svg)](https://deps.rs/crate/intersect2d/0.2.0)
+[![dependency status](https://deps.rs/crate/intersect2d/0.3.0/status.svg)](https://deps.rs/crate/intersect2d/0.3.0)
 # intersect2d
 After watching [Philipp Kindermann's](https://www.youtube.com/watch?v=I9EsN2DTnN8) excellent sweep-line 
 videos I think I finally understand how this algorithm works.
@@ -19,10 +19,15 @@ Code still in development, not ready for any purpose.
 
 ![Rusty voronoi](img.png)
 
-Quick iterative example:
+Interactive step-by-step example:
 ```fish
 cargo run --example fltk_gui --features console_trace
 ```
+
+Most of this crate have been adapted for [nalgebra](https://crates.io/crates/nalgebra), 
+[cgmath](https://crates.io/crates/cgmath), [mint](https://crates.io/crates/mint) and plain vector [here](https://crates.io/crates/linestring).
+\
+This crate will remain [geo](https://crates.io/crates/geo) based.
 
 Intersection function API example:
 ```rust
@@ -79,7 +84,9 @@ Detection of self-intersecting geo::LineString:
 let coords = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
 let line_string: geo::LineString<f32> = coords.into_iter().collect();
 
-// Obviously this example only makes sense for long LinesStrings.
+// Obviously this example only makes sense for LinesStrings with many points.
+// A simple brute force O(n²) intersection test will be faster than this O(log(n)n) 
+// sweep-line algorithm if n is small enough.  
 let result = AlgorithmData::<f32>::default()
     .with_ignore_end_point_intersections(true)?
     .with_stop_at_first_intersection(true)?

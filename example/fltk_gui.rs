@@ -68,7 +68,7 @@ fn main() -> Result<(), Error> {
     let mut wind = window::Window::default()
         .with_size(800, 800)
         .center_screen()
-        .with_label("Step-by-step sweep-line intersection algorithm");
+        .with_label("Iterative sweep-line intersection algorithm, press space to step");
 
     wind.set_color(Color::Black);
     wind.end();
@@ -357,7 +357,7 @@ fn print_results(data: AlgoType) {
         let size = data.0.get_lines().len();
 
         println!(
-                "Made {} calls to intersect() for {} line segments. Brute force approach would need at least {} calls",
+                "Made {} calls to intersect() for {} line segments. Brute force approach would need at least {} calls (n²/2)",
                 data.0.get_intersection_calls(),
                 size, size*size/2
             );
@@ -726,6 +726,7 @@ fn add_data(data: AlgoType) -> Result<(), Error> {
         [735, 105, 415, 586],
         [415, 586, 134, 520],
     ];
+
     data_b.0.with_ref_lines(to_lines(&_l).iter())?;
     data_b.0.with_ignore_end_point_intersections(true)?;
     Ok(())

@@ -52,12 +52,15 @@ licenses /why-not-lgpl.html>.
 
 use core::fmt;
 use num_traits::{Float, ToPrimitive, Zero};
+use thiserror::Error;
 
 pub mod algorithm;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum Error {
+    #[error("No NaN, inf etc. are allowed")]
     InvalidData,
+    #[error("Results already taken from the algorithm data struct")]
     ResultsAlreadyTaken,
 }
 
@@ -205,9 +208,9 @@ where
     let r = one.end - p;
     let s = other.end - q;
 
-    let r_cross_s = cross(&r, &s);
+    let r_cross_s = cross_z(&r, &s);
     let q_minus_p = q - p;
-    let q_minus_p_cross_r = cross(&q_minus_p, &r);
+    let q_minus_p_cross_r = cross_z(&q_minus_p, &r);
 
     // If r × s = 0 then the two lines are parallel
     if ulps_eq(&r_cross_s, &T::zero()) {
@@ -244,8 +247,8 @@ where
         }
     } else {
         // the lines are not parallel
-        let t = cross(&q_minus_p, &div(&s, r_cross_s));
-        let u = cross(&q_minus_p, &div(&r, r_cross_s));
+        let t = cross_z(&q_minus_p, &div(&s, r_cross_s));
+        let u = cross_z(&q_minus_p, &div(&r, r_cross_s));
 
         // If r × s ≠ 0 and 0 ≤ t ≤ 1 and 0 ≤ u ≤ 1,
         // the two line segments meet at the point p + t r = q + u s.
@@ -264,7 +267,7 @@ pub fn scale_to_coordinate<T>(
     scale: T,
 ) -> geo::Coordinate<T>
 where
-    T: Float + Zero + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     geo::Coordinate {
@@ -277,7 +280,7 @@ where
 /// Divides a 'vector' by 'b'. Obviously, don't feed this with 'b' == 0
 fn div<T>(a: &geo::Coordinate<T>, b: T) -> geo::Coordinate<T>
 where
-    T: Float + Zero + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     geo::Coordinate {
@@ -287,10 +290,12 @@ where
 }
 
 #[inline(always)]
-/// calculate the cross product of two lines
-fn cross<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> T
+/// from https://stackoverflow.com/a/565282 :
+///  "Define the 2-dimensional vector cross product v × w to be vx wy − vy wx."
+/// This function returns the z component of v × w
+fn cross_z<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> T
 where
-    T: Float + Zero + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     a.x * b.y - a.y * b.x
@@ -300,7 +305,7 @@ where
 /// calculate the dot product of two lines
 fn dot<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> T
 where
-    T: Float + Zero + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     a.x * b.x + a.y * b.y
@@ -310,7 +315,7 @@ where
 #[allow(dead_code)]
 pub fn ulps_eq_c<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> bool
 where
-    T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     ulps_eq(&a.x, &b.x) && ulps_eq(&a.y, &b.y)
@@ -320,7 +325,7 @@ where
 #[allow(dead_code)]
 pub fn ulps_eq<T>(a: &T, b: &T) -> bool
 where
-    T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     T::ulps_eq(a, b, T::default_epsilon(), T::default_max_ulps())
