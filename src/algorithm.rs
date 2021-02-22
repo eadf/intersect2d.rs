@@ -56,7 +56,7 @@ use std::marker::PhantomData;
 #[derive(Clone, Copy)]
 pub struct SiteEventKey<T>
 where
-    T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
+    T: Float + approx::UlpsEq + geo::CoordNum,
     T::Epsilon: Copy,
 {
     pub pos: geo::Coordinate<T>,
@@ -89,7 +89,7 @@ where
 
 impl<T> PartialOrd for SiteEventKey<T>
 where
-    T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
@@ -106,7 +106,7 @@ where
 
 impl<T> PartialEq for SiteEventKey<T>
 where
-    T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -130,7 +130,7 @@ where
 
 impl<T> MinMax<T>
 where
-    T: Sized + Float + fmt::Display + approx::UlpsEq + geo::CoordNum,
+    T: Sized + Float + approx::UlpsEq + geo::CoordNum,
     T::Epsilon: Copy,
 {
     fn new() -> Self {
@@ -222,7 +222,7 @@ where
 
 impl<T> MinMaxSlope<T>
 where
-    T: Sized + Float + fmt::Display + approx::UlpsEq + geo::CoordNum,
+    T: Sized + Float + approx::UlpsEq + geo::CoordNum,
     T::Epsilon: Copy,
 {
     fn new() -> Self {
@@ -394,13 +394,7 @@ where
 /// Second return value is the slope of the line
 fn sweepline_intersection<T>(sweepline: geo::Coordinate<T>, other: &geo::Line<T>) -> Option<(T, T)>
 where
-    T: Float
-        + Zero
-        + fmt::Display
-        + geo::CoordNum
-        + PartialOrd
-        + approx::AbsDiffEq
-        + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     // line equation: y=slope*x+d => d=y-slope*x => x = (y-d)/slope
@@ -436,7 +430,7 @@ where
 /// to take() them and make the borrow-checker happy.
 pub struct AlgorithmData<T>
 where
-    T: Float + geo::CoordNum + PartialOrd + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     // sweep-line position
@@ -466,13 +460,7 @@ where
 
 impl<T> Default for AlgorithmData<T>
 where
-    T: Float
-        + fmt::Display
-        + num_traits::ToPrimitive
-        + geo::CoordNum
-        + PartialOrd
-        + approx::AbsDiffEq
-        + approx::UlpsEq,
+    T: Float + num_traits::ToPrimitive + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     fn default() -> Self {
@@ -496,13 +484,7 @@ where
 
 impl<T> AlgorithmData<T>
 where
-    T: Float
-        + fmt::Display
-        + num_traits::ToPrimitive
-        + geo::CoordNum
-        + PartialOrd
-        + approx::AbsDiffEq
-        + approx::UlpsEq,
+    T: Float + num_traits::ToPrimitive + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     pub fn get_sweepline_pos(&self) -> &geo::Coordinate<T> {

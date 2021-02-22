@@ -69,7 +69,7 @@ pub enum Error {
 pub fn to_lines<U, T>(points: &[[U; 4]]) -> Vec<geo::Line<T>>
 where
     U: ToPrimitive + Copy,
-    T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
+    T: Float + approx::UlpsEq + geo::CoordNum,
     T::Epsilon: Copy,
 {
     let mut rv = Vec::with_capacity(points.len());
@@ -95,13 +95,7 @@ pub fn intersect_line_point<T>(
     point: &geo::Coordinate<T>,
 ) -> Option<Intersection<T>>
 where
-    T: Float
-        + Zero
-        + fmt::Display
-        + geo::CoordNum
-        + PartialOrd
-        + approx::AbsDiffEq
-        + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     // take care of end point equality
@@ -124,7 +118,7 @@ where
     let pb = ((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y)).sqrt();
 
     #[cfg(feature = "console_trace")]
-    println!("ab={}, ap={}, pb={}, ap+pb={}", ab, ap, pb, ap + pb);
+    println!("ab={:?}, ap={:?}, pb={:?}, ap+pb={:?}", ab, ap, pb, ap + pb);
     if ulps_eq(&ab, &(ap + pb)) {
         return Some(Intersection::Intersection(*point));
     }
@@ -134,13 +128,7 @@ where
 #[allow(dead_code)]
 pub enum Intersection<T>
 where
-    T: Float
-        + Zero
-        + fmt::Display
-        + geo::CoordNum
-        + PartialOrd
-        + approx::AbsDiffEq
-        + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     // Normal one point intersection
@@ -151,13 +139,7 @@ where
 
 impl<T> Intersection<T>
 where
-    T: Float
-        + Zero
-        + fmt::Display
-        + geo::CoordNum
-        + PartialOrd
-        + approx::AbsDiffEq
-        + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     /// return a single, simple intersection point
@@ -171,13 +153,7 @@ where
 
 impl<T> fmt::Debug for Intersection<T>
 where
-    T: Float
-        + Zero
-        + fmt::Display
-        + geo::CoordNum
-        + PartialOrd
-        + approx::AbsDiffEq
-        + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -194,13 +170,7 @@ where
 #[allow(clippy::many_single_char_names)]
 pub fn intersect<T>(one: &geo::Line<T>, other: &geo::Line<T>) -> Option<Intersection<T>>
 where
-    T: Float
-        + Zero
-        + fmt::Display
-        + geo::CoordNum
-        + PartialOrd
-        + approx::AbsDiffEq
-        + approx::UlpsEq,
+    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     let p = one.start;

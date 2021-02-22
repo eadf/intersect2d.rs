@@ -1,5 +1,4 @@
 use approx;
-use core::fmt;
 use geo::algorithm::intersects::Intersects;
 
 #[allow(unused_imports)]
@@ -12,7 +11,7 @@ use num_traits::{Float, ToPrimitive};
 /// Test verification
 pub fn brute_force<T>(lines: &[geo::Line<T>]) -> Vec<(usize, Vec<usize>)>
 where
-    T: Float + approx::UlpsEq + fmt::Display + geo::GeoNum + PartialOrd,
+    T: Float + approx::UlpsEq + geo::GeoNum + PartialOrd,
     T::Epsilon: Copy,
 {
     let mut rv: Vec<(usize, Vec<usize>)> = Vec::new();
