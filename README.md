@@ -34,14 +34,9 @@ Intersection function API example:
 use intersection2d::{intersect, Intersection};
 use geo;
 
-let line1 = geo::Line::<f64>::new(
-    geo::Coordinate { x: 100.0, y: 150.0 },
-    geo::Coordinate { x: 150.0, y: 100.0 },
-);
-let line2 = geo::Line::<f64>::new(
-    geo::Coordinate { x: 100.0, y: 150.0 },
-    geo::Coordinate { x: 150.0, y: 100.0 },
-);
+let line1:geo::Line::<f64> = [(100.0,150.),(150.0,100.)].into();
+let line2:geo::Line::<f64> = [(100.0,150.),(150.0,100.)].into();
+
 let _rv = intersect(&line1, &line2);
 match _rv {
     Some(Intersection::Intersection(_a)) => panic!("expected an overlap"),
