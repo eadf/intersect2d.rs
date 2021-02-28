@@ -173,6 +173,36 @@ where
     T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
+    // AABB tests
+    if one.end.x > other.end.x
+        && one.end.x > other.start.x
+        && one.start.x > other.end.x
+        && one.start.x > other.start.x
+    {
+        return None;
+    }
+    if one.end.x < other.end.x
+        && one.end.x < other.start.x
+        && one.start.x < other.end.x
+        && one.start.x < other.start.x
+    {
+        return None;
+    }
+    if one.end.y > other.end.y
+        && one.end.y > other.start.y
+        && one.start.y > other.end.y
+        && one.start.y > other.start.y
+    {
+        return None;
+    }
+    if one.end.y < other.end.y
+        && one.end.y < other.start.y
+        && one.start.y < other.end.y
+        && one.start.y < other.start.y
+    {
+        return None;
+    }
+
     let p = one.start;
     let q = other.start;
     let r = one.end - p;
