@@ -47,9 +47,9 @@ use fltk::*;
 use intersect2d::algorithm::AlgorithmData;
 use intersect2d::{scale_to_coordinate, to_lines, Error};
 use itertools::Itertools;
-//use num_traits::{Float, ToPrimitive};
 use std::cell::RefCell;
 use std::rc::Rc;
+use fltk::app::redraw;
 
 const DRAW_TEXT: bool = true;
 
@@ -211,6 +211,7 @@ fn main() -> Result<(), Error> {
                     let alg_data_clone = Rc::clone(&alg_data_c);
                     print_results(alg_data_clone);
                 }
+                redraw();
             };
             true
         }
@@ -222,12 +223,7 @@ fn main() -> Result<(), Error> {
         _ => false,
     });
 
-    while app.wait() {
-        wind.redraw();
-        if !cfg!(windows) {
-            std::thread::sleep(std::time::Duration::from_millis(10));
-        }
-    }
+    app.run().unwrap();
     Ok(())
 }
 
