@@ -2,8 +2,8 @@ use approx;
 use geo::algorithm::intersects::Intersects;
 
 #[allow(unused_imports)]
-use intersect2d::{intersect, scale_to_coordinate, to_lines, ulps_eq, Intersection};
-//use intersections_2d::algorithm::{AlgorithmData, SiteEventKey};
+use intersect2d::{intersect, scale_to_coordinate, to_lines, Intersection};
+
 #[allow(unused_imports)]
 use num_traits::{Float, ToPrimitive};
 
@@ -45,8 +45,8 @@ where
     T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
     T::Epsilon: Copy,
 {
-    assert!(ulps_eq(&x1, &x2));
-    assert!(ulps_eq(&y1, &y2));
+    assert!(approx::ulps_eq!(&x1, &x2));
+    assert!(approx::ulps_eq!(&y1, &y2));
 }
 
 /// draws a line pivoting around (x,y) with 'angle' in degrees

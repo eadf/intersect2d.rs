@@ -1,19 +1,13 @@
+#[allow(unused_imports)]
 use approx;
+#[allow(unused_imports)]
 use geo::algorithm::intersects::Intersects;
+#[allow(unused_imports)]
 use intersect2d::algorithm::{AlgorithmData, SiteEventKey};
 #[allow(unused_imports)]
-use intersect2d::{intersect, scale_to_coordinate, to_lines, ulps_eq};
+use intersect2d::{intersect, scale_to_coordinate, to_lines};
+#[allow(unused_imports)]
 use num_traits::Float;
-
-#[allow(dead_code)]
-fn almost_equal<T>(x1: T, x2: T, y1: T, y2: T)
-where
-    T: Float + approx::UlpsEq + geo::CoordNum + PartialOrd,
-    T::Epsilon: Copy,
-{
-    assert!(ulps_eq(&x1, &x2));
-    assert!(ulps_eq(&y1, &y2));
-}
 
 #[test]
 fn two_connected_1() -> Result<(), intersect2d::Error> {

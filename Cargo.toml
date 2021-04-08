@@ -23,9 +23,14 @@ fnv = "^1.0.7"
 thiserror = "1.0.24"
 
 [dev-dependencies]
-fltk = "^0.15.5"
+fltk = "^0.16.4"
 itertools = "^0.10.0"
+criterion = "^0.3.4"
 
 [features]
 # this is used to print algorithm progression traces to the console
 console_trace = []
+
+[[bench]]
+name = "bench"
+harness = false

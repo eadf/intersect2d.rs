@@ -51,7 +51,8 @@ licenses /why-not-lgpl.html>.
 #![deny(unused_imports)]
 
 use core::fmt;
-use num_traits::{Float, ToPrimitive, Zero};
+use geo::algorithm::intersects::Intersects;
+use num_traits::{Float, Zero};
 use thiserror::Error;
 
 pub mod algorithm;
@@ -60,6 +61,8 @@ pub mod algorithm;
 pub enum Error {
     #[error("No NaN, inf etc. are allowed")]
     InvalidData,
+    #[error("When searching for intersections in LineStrings the 'ignore_end_point_intersections' parameter must be set to 'true'.")]
+    InvalidSearchParameter,
     #[error("Results already taken from the algorithm data struct")]
     ResultsAlreadyTaken,
 }
@@ -68,8 +71,8 @@ pub enum Error {
 #[allow(dead_code)]
 pub fn to_lines<U, T>(points: &[[U; 4]]) -> Vec<geo::Line<T>>
 where
-    U: ToPrimitive + Copy,
-    T: Float + approx::UlpsEq + geo::CoordNum,
+    U: num_traits::ToPrimitive + Copy,
+    T: Float + approx::UlpsEq + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     let mut rv = Vec::with_capacity(points.len());
@@ -95,14 +98,14 @@ pub fn intersect_line_point<T>(
     point: &geo::Coordinate<T>,
 ) -> Option<Intersection<T>>
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     // take care of end point equality
-    if ulps_eq(&line.start.x, &point.x) && ulps_eq(&line.start.y, &point.y) {
+    if approx::ulps_eq!(&line.start.x, &point.x) && approx::ulps_eq!(&line.start.y, &point.y) {
         return Some(Intersection::Intersection(*point));
     }
-    if ulps_eq(&line.end.x, &point.x) && ulps_eq(&line.end.y, &point.y) {
+    if approx::ulps_eq!(&line.end.x, &point.x) && approx::ulps_eq!(&line.end.y, &point.y) {
         return Some(Intersection::Intersection(*point));
     }
 
@@ -119,7 +122,7 @@ where
 
     #[cfg(feature = "console_trace")]
     println!("ab={:?}, ap={:?}, pb={:?}, ap+pb={:?}", ab, ap, pb, ap + pb);
-    if ulps_eq(&ab, &(ap + pb)) {
+    if approx::ulps_eq!(&ab, &(ap + pb)) {
         return Some(Intersection::Intersection(*point));
     }
     None
@@ -128,7 +131,7 @@ where
 #[allow(dead_code)]
 pub enum Intersection<T>
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     // Normal one point intersection
@@ -139,7 +142,7 @@ where
 
 impl<T> Intersection<T>
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     /// return a single, simple intersection point
@@ -153,7 +156,7 @@ where
 
 impl<T> fmt::Debug for Intersection<T>
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -170,7 +173,7 @@ where
 #[allow(clippy::many_single_char_names)]
 pub fn intersect<T>(one: &geo::Line<T>, other: &geo::Line<T>) -> Option<Intersection<T>>
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     #[allow(clippy::suspicious_operation_groupings)]
@@ -215,7 +218,7 @@ where
     let q_minus_p_cross_r = cross_z(&q_minus_p, &r);
 
     // If r × s = 0 then the two lines are parallel
-    if ulps_eq(&r_cross_s, &T::zero()) {
+    if approx::ulps_eq!(&r_cross_s, &T::zero()) {
         // one (or both) of the lines may be a point
         let one_is_a_point = ulps_eq_c(&one.start, &one.end);
         let other_is_a_point = ulps_eq_c(&other.start, &other.end);
@@ -231,7 +234,7 @@ where
         }
 
         // If r × s = 0 and (q − p) × r = 0, then the two lines are collinear.
-        if ulps_eq(&q_minus_p_cross_r, &T::zero()) {
+        if approx::ulps_eq!(&q_minus_p_cross_r, &T::zero()) {
             let r_dot_r = dot(&r, &r);
             let r_div_r_dot_r = div(&r, r_dot_r);
             let s_dot_r = dot(&s, &r);
@@ -269,7 +272,7 @@ pub fn scale_to_coordinate<T>(
     scale: T,
 ) -> geo::Coordinate<T>
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     geo::Coordinate {
@@ -282,7 +285,7 @@ where
 /// Divides a 'vector' by 'b'. Obviously, don't feed this with 'b' == 0
 fn div<T>(a: &geo::Coordinate<T>, b: T) -> geo::Coordinate<T>
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     geo::Coordinate {
@@ -297,7 +300,7 @@ where
 /// This function returns the z component of v × w
 fn cross_z<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> T
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     a.x * b.y - a.y * b.x
@@ -307,28 +310,302 @@ where
 /// calculate the dot product of two lines
 fn dot<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> T
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     a.x * b.x + a.y * b.y
 }
 
-#[inline(always)]
-#[allow(dead_code)]
-pub fn ulps_eq_c<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> bool
+pub trait SelfIntersecting<T>
 where
-    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float
+        + num_traits::ToPrimitive
+        + geo::GeoFloat
+        + geo::CoordFloat
+        + approx::AbsDiffEq
+        + approx::UlpsEq,
     T::Epsilon: Copy,
 {
-    ulps_eq(&a.x, &b.x) && ulps_eq(&a.y, &b.y)
+    /// Returns true if any line intersects any other line in the collection.
+    fn is_self_intersecting(&self, ignore_end_point_intersections: bool) -> Result<bool, Error>;
+
+    /// Returns a list of intersection points and the involved lines, if any intersections are found.
+    /// 'stop_at_first_intersection' : will report at most one intersection
+    /// 'ignore_end_point_intersections' : will not report intersecting endpoints as intersections.
+    #[allow(clippy::type_complexity)]
+    fn self_intersections<'a>(
+        &self,
+        stop_at_first_intersection: bool,
+        ignore_end_point_intersections: bool,
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
+    where
+        T: 'a;
+}
+
+impl<T> SelfIntersecting<T> for Vec<geo::Line<T>>
+where
+    T: Float
+        + num_traits::ToPrimitive
+        + geo::GeoFloat
+        + geo::CoordFloat
+        + approx::AbsDiffEq
+        + approx::UlpsEq,
+    T::Epsilon: Copy,
+{
+    /// Returns true if the LineString is self intersecting.
+    /// The 'ignore_end_point_intersections' parameter must always be set to true when testing
+    /// LineStrings.
+    /// ```
+    /// # use intersect2d::SelfIntersecting;
+    ///
+    /// let lines: Vec<geo::Line<_>> = geo::LineString::from(vec![
+    ///     (100., 100.),
+    ///     (200., 100.),
+    ///     (200., 200.),
+    ///     (100., 200.),
+    ///     (100., 100.),
+    /// ]).lines().collect();
+    /// assert!(!lines.is_self_intersecting(true).unwrap());
+    ///
+    /// let lines: Vec<geo::Line<_>> = geo::LineString::from(vec![
+    ///    (100., 100.),
+    ///    (200., 100.),
+    ///    (200., 200.),
+    ///    (150., 50.),
+    ///    (100., 200.),
+    ///    (100., 100.),
+    /// ]).lines().collect();
+    /// assert!(lines.is_self_intersecting(true).unwrap());
+    /// ```
+    fn is_self_intersecting(&self, ignore_end_point_intersections: bool) -> Result<bool, Error> {
+        // arbitrary selected break point,
+        // todo: make some bench tests
+        if self.len() < 10 {
+            if !ignore_end_point_intersections {
+                for l1 in self.iter().enumerate() {
+                    for l2 in self.iter().skip(l1.0) {
+                        // geo::intersects::Intersects intersects on all end-points
+                        if l1.1.intersects(l2) {
+                            return Ok(true);
+                        }
+                    }
+                }
+            } else {
+                for l1 in self.iter().enumerate() {
+                    for l2 in self.iter().skip(l1.0) {
+                        if ulps_eq_c(&l1.1.start, &l2.start)
+                            || ulps_eq_c(&l1.1.start, &l2.end)
+                            || ulps_eq_c(&l1.1.end, &l2.start)
+                            || ulps_eq_c(&l1.1.end, &l2.end)
+                        {
+                            if ignore_end_point_intersections {
+                                continue;
+                            } else {
+                                return Ok(true);
+                            }
+                        }
+                        if l1.1.intersects(l2) {
+                            return Ok(true);
+                        }
+                    }
+                }
+            }
+            return Ok(false);
+        }
+        Ok(!algorithm::AlgorithmData::<T>::default()
+            .with_ignore_end_point_intersections(ignore_end_point_intersections)?
+            .with_stop_at_first_intersection(true)?
+            .with_ref_lines(self.iter())?
+            .compute()?
+            .is_empty())
+    }
+
+    /// Returns an iterator containing the found intersections.
+    /// ```
+    /// # use intersect2d::SelfIntersecting;
+    ///
+    /// let lines : Vec<geo::Line<_>>= geo::LineString::from(vec![
+    ///     (100., 100.),
+    ///     (200., 100.),
+    ///     (200., 200.),
+    ///     (100., 200.),
+    ///     (100., 100.),
+    /// ]).lines().collect();
+    ///
+    /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
+    ///     lines.self_intersections(false,true).expect("err").collect();
+    /// assert!(rv.is_empty());
+    ///
+    /// let lines : Vec<geo::Line<_>> = geo::LineString::from(vec![
+    ///    (100., 100.),
+    ///    (200., 100.),
+    ///    (200., 200.),
+    ///    (150., 50.),
+    ///    (100., 200.),
+    ///    (100., 100.),
+    /// ]).lines().collect();
+    /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
+    ///     lines.self_intersections(false,true).expect("err").collect();
+    ///
+    /// assert_eq!(rv.len(), 2);
+    /// assert_eq!(rv[0].1, vec!(0,3));
+    /// assert_eq!(rv[0].0, geo::Coordinate{x: 133.33333333333334, y: 100.0});
+    /// assert_eq!(rv[1].1, vec!(0,2));
+    /// assert_eq!(rv[1].0, geo::Coordinate{x: 166.66666666666666, y: 100.0});
+    /// ```
+    #[allow(clippy::type_complexity)]
+    fn self_intersections<'a>(
+        &self,
+        stop_at_first_intersection: bool,
+        ignore_end_point_intersections: bool,
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
+    where
+        T: 'a,
+    {
+        // Todo: add brute force test if n is small enough
+        Ok(Box::new(
+            algorithm::AlgorithmData::<T>::default()
+                .with_ignore_end_point_intersections(ignore_end_point_intersections)?
+                .with_stop_at_first_intersection(stop_at_first_intersection)?
+                .with_ref_lines(self.iter())?
+                .compute()?
+                .into_iter()
+                .map(|x| (x.0.pos, x.1)),
+        ))
+    }
+}
+
+impl<T> SelfIntersecting<T> for geo::LineString<T>
+where
+    T: Float
+        + num_traits::ToPrimitive
+        + geo::GeoFloat
+        + geo::CoordFloat
+        + approx::AbsDiffEq
+        + approx::UlpsEq,
+    T::Epsilon: Copy,
+{
+    /// Returns true if the LineString is self intersecting.
+    /// The 'ignore_end_point_intersections' parameter must always be set to true when testing
+    /// LineStrings.
+    /// ```
+    /// # use intersect2d::SelfIntersecting;
+    ///
+    /// let line_string = geo::LineString::from(vec![
+    ///     (100., 100.),
+    ///     (200., 100.),
+    ///     (200., 200.),
+    ///     (100., 200.),
+    ///     (100., 100.),
+    /// ]);
+    /// assert!(!line_string.is_self_intersecting(true).unwrap());
+    ///
+    /// let line_string = geo::LineString::from(vec![
+    ///    (100., 100.),
+    ///    (200., 100.),
+    ///    (200., 200.),
+    ///    (150., 50.),
+    ///    (100., 200.),
+    ///    (100., 100.),
+    /// ]);
+    /// assert!(line_string.is_self_intersecting(true).unwrap());
+    /// ```
+    fn is_self_intersecting(&self, ignore_end_point_intersections: bool) -> Result<bool, Error> {
+        if !ignore_end_point_intersections {
+            // It does not make sense to *not* ignore end point intersections in LineStrings
+            return Err(Error::InvalidSearchParameter);
+        }
+        Ok(!algorithm::AlgorithmData::<T>::default()
+            .with_ignore_end_point_intersections(true)?
+            .with_stop_at_first_intersection(true)?
+            .with_lines(self.lines())?
+            .compute()?
+            .is_empty())
+        //println!("ls :{:?}", self.lines().collect::<Vec<geo::Line<_>>>());
+        //println!("rv : {:?}, {}", rv, rv.len());
+        //for r in rv.iter() {
+        //    println!("rv @:{:?}, {:?}", r.0.pos, r.1);
+        //}
+    }
+
+    /// Returns an iterator containing the found intersections.
+    /// The 'ignore_end_point_intersections' parameter must always be set to true when testing
+    /// LineStrings.
+    /// ```
+    /// # use intersect2d::SelfIntersecting;
+    ///
+    /// let line_string = geo::LineString::from(vec![
+    ///     (100., 100.),
+    ///     (200., 100.),
+    ///     (200., 200.),
+    ///     (100., 200.),
+    ///     (100., 100.),
+    /// ]);
+    /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
+    ///     line_string.self_intersections(false,true).expect("err").collect();
+    /// assert!(rv.is_empty());
+    ///
+    /// let line_string = geo::LineString::from(vec![
+    ///    (100., 100.),
+    ///    (200., 100.),
+    ///    (200., 200.),
+    ///    (150., 50.),
+    ///    (100., 200.),
+    ///    (100., 100.),
+    /// ]);
+    /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
+    ///     line_string.self_intersections(false,true).expect("err").collect();
+    ///
+    /// assert_eq!(line_string.0.len(),6);
+    /// assert_eq!(rv.len(), 2);
+    /// assert_eq!(rv[0].1, vec!(0,3));
+    /// assert_eq!(rv[0].0, geo::Coordinate{x: 133.33333333333334, y: 100.0});
+    /// assert_eq!(rv[1].1, vec!(0,2));
+    /// assert_eq!(rv[1].0, geo::Coordinate{x: 166.66666666666666, y: 100.0});
+    /// ```
+    #[allow(clippy::type_complexity)]
+    fn self_intersections<'a>(
+        &self,
+        stop_at_first_intersection: bool,
+        ignore_end_point_intersections: bool,
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
+    where
+        T: 'a,
+    {
+        if !ignore_end_point_intersections {
+            // It does not make sense to *not* ignore end point intersections in LineStrings
+            return Err(Error::InvalidSearchParameter);
+        }
+        Ok(Box::new(
+            algorithm::AlgorithmData::<T>::default()
+                .with_ignore_end_point_intersections(ignore_end_point_intersections)?
+                .with_stop_at_first_intersection(stop_at_first_intersection)?
+                .with_lines(self.lines())?
+                .compute()?
+                .into_iter()
+                .map(|x| (x.0.pos, x.1)),
+        ))
+    }
+}
+
+/// returns true if the two coordinates are virtually identical
+///
+#[inline(always)]
+pub fn ulps_eq_c<T>(a: &geo::Coordinate<T>, b: &geo::Coordinate<T>) -> bool
+where
+    T: Float + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
+    T::Epsilon: Copy,
+{
+    approx::ulps_eq!(&a.x, &b.x) && approx::ulps_eq!(&a.y, &b.y)
 }
 
 #[inline(always)]
 #[allow(dead_code)]
+#[deprecated(since = "0.3.2", note = "please use `approx::ulps_eq!` instead")]
 pub fn ulps_eq<T>(a: &T, b: &T) -> bool
 where
-    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
-    T::ulps_eq(a, b, T::default_epsilon(), T::default_max_ulps())
+    approx::ulps_eq!(a, b)
 }

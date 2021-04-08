@@ -43,7 +43,7 @@ License instead of this License. But first, please read <https://www.gnu.org/
 licenses /why-not-lgpl.html>.
  */
 
-use super::{intersect, ulps_eq, ulps_eq_c};
+use super::{intersect, ulps_eq_c};
 use core::fmt;
 use fnv::FnvHashSet;
 use num_traits::{Float, Zero};
@@ -56,7 +56,7 @@ use std::marker::PhantomData;
 #[derive(Clone, Copy)]
 pub struct SiteEventKey<T>
 where
-    T: Float + approx::UlpsEq + geo::CoordNum,
+    T: Float + approx::UlpsEq + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     pub pos: geo::Coordinate<T>,
@@ -64,7 +64,7 @@ where
 
 impl<T> SiteEventKey<T>
 where
-    T: Float + approx::UlpsEq + Copy + geo::CoordNum,
+    T: Float + approx::UlpsEq + Copy + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     pub fn new(x: T, y: T) -> Self {
@@ -76,7 +76,7 @@ where
 
 impl<T> Debug for SiteEventKey<T>
 where
-    T: Float + approx::UlpsEq + Copy + geo::CoordNum,
+    T: Float + approx::UlpsEq + Copy + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -89,12 +89,12 @@ where
 
 impl<T> PartialOrd for SiteEventKey<T>
 where
-    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        if ulps_eq(&self.pos.y, &other.pos.y) {
-            if ulps_eq(&self.pos.x, &other.pos.x) {
+        if approx::ulps_eq!(&self.pos.y, &other.pos.y) {
+            if approx::ulps_eq!(&self.pos.x, &other.pos.x) {
                 return Some(cmp::Ordering::Equal);
             } else {
                 return Some(OrderedFloat(self.pos.x).cmp(&OrderedFloat(other.pos.x)));
@@ -106,7 +106,7 @@ where
 
 impl<T> PartialEq for SiteEventKey<T>
 where
-    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -120,7 +120,7 @@ where
 /// leaning towards pivot point have priority.
 struct MinMax<T>
 where
-    T: Float + approx::UlpsEq + geo::CoordNum,
+    T: Float + approx::UlpsEq + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     best_left: Option<T>,
@@ -130,7 +130,7 @@ where
 
 impl<T> MinMax<T>
 where
-    T: Sized + Float + approx::UlpsEq + geo::CoordNum,
+    T: Sized + Float + approx::UlpsEq + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     fn new() -> Self {
@@ -150,7 +150,7 @@ where
             );*/
             // handle left side
             if let Some(current_min) = self.best_left {
-                if ulps_eq(&current_min, &candidate_x) {
+                if approx::ulps_eq!(&current_min, &candidate_x) {
                     self.slope
                         .update_left(false, candidate_slope, candidate_index);
                 } else if current_min < candidate_x {
@@ -177,7 +177,7 @@ where
             );*/
             // handle right side
             if let Some(current_max) = self.best_right {
-                if ulps_eq(&current_max, &candidate_x) {
+                if approx::ulps_eq!(&current_max, &candidate_x) {
                     self.slope
                         .update_right(false, candidate_slope, candidate_index);
                 } else if current_max > candidate_x {
@@ -210,7 +210,7 @@ where
 
 struct MinMaxSlope<T>
 where
-    T: Float + approx::UlpsEq + geo::CoordNum,
+    T: Float + approx::UlpsEq + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     best_left: Option<T>, // slope
@@ -222,7 +222,7 @@ where
 
 impl<T> MinMaxSlope<T>
 where
-    T: Sized + Float + approx::UlpsEq + geo::CoordNum,
+    T: Sized + Float + approx::UlpsEq + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     fn new() -> Self {
@@ -237,7 +237,7 @@ where
     /// sort candidates based on slope, keep only the ones with 'flattest' angle to the left and right
     fn update_both(&mut self, candidate_index: usize, lines: &[geo::Line<T>]) {
         let line = lines[candidate_index];
-        let candidate_slope = if ulps_eq(&line.end.y, &line.start.y) {
+        let candidate_slope = if approx::ulps_eq!(&line.end.y, &line.start.y) {
             T::infinity()
         } else {
             (line.end.x - line.start.x) / (line.end.y - line.start.y)
@@ -259,7 +259,7 @@ where
         );*/
         // handle left side
         if let Some(current_slope) = self.best_left {
-            if ulps_eq(&current_slope, &candidate_slope) {
+            if approx::ulps_eq!(&current_slope, &candidate_slope) {
                 // this candidate is just as good as the others already found
                 self.candidates_left.push(candidate_index);
             } else if candidate_slope < current_slope {
@@ -297,7 +297,7 @@ where
         }
         // handle right side
         if let Some(current_slope) = self.best_right {
-            if ulps_eq(&current_slope, &candidate_slope) {
+            if approx::ulps_eq!(&current_slope, &candidate_slope) {
                 // this candidate is just as good as the others already found
                 self.candidates_right.push(candidate_index);
             } else if candidate_slope > current_slope {
@@ -343,7 +343,7 @@ where
 ///
 pub struct SiteEvent<T>
 where
-    T: Float + approx::UlpsEq + geo::CoordNum,
+    T: Float + approx::UlpsEq + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     drop: Option<Vec<usize>>,
@@ -355,7 +355,7 @@ where
 
 impl<T> SiteEvent<T>
 where
-    T: Float + approx::UlpsEq + geo::CoordNum,
+    T: Float + approx::UlpsEq + geo::CoordFloat,
     T::Epsilon: Copy,
 {
     pub(crate) fn with_intersection(i: &[usize]) -> Self {
@@ -394,7 +394,7 @@ where
 /// Second return value is the slope of the line
 fn sweepline_intersection<T>(sweepline: geo::Coordinate<T>, other: &geo::Line<T>) -> Option<(T, T)>
 where
-    T: Float + Zero + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + Zero + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     // line equation: y=slope*x+d => d=y-slope*x => x = (y-d)/slope
@@ -402,7 +402,7 @@ where
     let y2 = other.end.y;
     let x1 = other.start.x;
     let x2 = other.end.x;
-    if ulps_eq(&y1, &y2) {
+    if approx::ulps_eq!(&y1, &y2) {
         // horizontal line: return to the point right of sweepline.x, if any
         // Any point to the left are supposedly already handled.
         if sweepline.x < x2 {
@@ -412,7 +412,7 @@ where
         }
     }
 
-    if ulps_eq(&x1, &x2) {
+    if approx::ulps_eq!(&x1, &x2) {
         return Some((x1, T::infinity()));
     }
 
@@ -430,7 +430,7 @@ where
 /// to take() them and make the borrow-checker happy.
 pub struct AlgorithmData<T>
 where
-    T: Float + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     // sweep-line position
@@ -460,7 +460,7 @@ where
 
 impl<T> Default for AlgorithmData<T>
 where
-    T: Float + num_traits::ToPrimitive + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + num_traits::ToPrimitive + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     fn default() -> Self {
@@ -484,7 +484,7 @@ where
 
 impl<T> AlgorithmData<T>
 where
-    T: Float + num_traits::ToPrimitive + geo::CoordNum + approx::AbsDiffEq + approx::UlpsEq,
+    T: Float + num_traits::ToPrimitive + geo::CoordFloat + approx::AbsDiffEq + approx::UlpsEq,
     T::Epsilon: Copy,
 {
     pub fn get_sweepline_pos(&self) -> &geo::Coordinate<T> {
@@ -707,22 +707,10 @@ where
     /// handles input event, returns true when done
     /// If interactive is set, the method will handle only one event for each call
     pub fn compute(&mut self) -> Result<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>, super::Error> {
-        let _ = self._compute(false);
-        self.take_results()
-    }
-
-    /// handles input event, returns true when done
-    /// You will have call take_results() if the method returns true
-    pub fn compute_iterative(&mut self) -> Result<bool, super::Error> {
-        Ok(self._compute(true))
-    }
-
-    #[allow(unused_assignments)]
-    /// handles input event, returns true when done
-    /// If interactive is set, the method will handle only one event for each call
-    fn _compute(&mut self, interactive: bool) -> bool {
-        if self.stop_at_first_intersection && self.result.is_some() {
-            return true;
+        // this could only happen if first run interactive, but just in case..
+        if self.stop_at_first_intersection && self.result.as_ref().map_or(false, |x| !x.is_empty())
+        {
+            return self.take_results();
         }
 
         // make the borrow checker happy by breaking the link between self and all the
@@ -733,10 +721,7 @@ where
         let mut neighbour_priority = self.neighbour_priority.take().unwrap();
         let mut connected_priority = self.connected_priority.take().unwrap();
 
-        // return value
-        let mut algorithm_is_done = false;
-
-        'pop_loop: loop {
+        loop {
             if let Some((key, event)) = site_events.pop_pair() {
                 self.handle_event(
                     &key,
@@ -752,14 +737,7 @@ where
                     x: T::max_value(),
                     y: T::max_value(),
                 };
-
-                algorithm_is_done = true;
-                break 'pop_loop;
-            }
-
-            if interactive {
-                algorithm_is_done = false;
-                break 'pop_loop;
+                break;
             }
         }
 
@@ -769,7 +747,55 @@ where
         self.result = Some(result);
         self.neighbour_priority = Some(neighbour_priority);
         self.connected_priority = Some(connected_priority);
-        algorithm_is_done
+        self.take_results()
+    }
+
+    /// handles input event, returns true when done
+    /// You will have call take_results() if the method returns true
+    pub fn compute_iterative(&mut self) -> Result<bool, super::Error> {
+        if self.stop_at_first_intersection && self.result.as_ref().map_or(false, |x| !x.is_empty())
+        {
+            return Ok(true);
+        }
+
+        // make the borrow checker happy by breaking the link between self and all the
+        // containers and their iterators.
+        let mut active_lines = self.active_lines.take().unwrap();
+        let mut site_events = self.site_events.take().unwrap();
+        let mut result = self.result.take().unwrap();
+        let mut neighbour_priority = self.neighbour_priority.take().unwrap();
+        let mut connected_priority = self.connected_priority.take().unwrap();
+
+        // return value
+        let algorithm_is_done: bool;
+
+        algorithm_is_done = if let Some((key, event)) = site_events.pop_pair() {
+            self.handle_event(
+                &key,
+                &event,
+                &mut active_lines,
+                &mut neighbour_priority,
+                &mut connected_priority,
+                &mut site_events,
+                &mut result,
+            );
+            false
+        } else {
+            self.sweepline_pos = geo::Coordinate {
+                x: T::max_value(),
+                y: T::max_value(),
+            };
+
+            true
+        };
+
+        // put the borrowed containers back
+        self.site_events = Some(site_events);
+        self.active_lines = Some(active_lines);
+        self.result = Some(result);
+        self.neighbour_priority = Some(neighbour_priority);
+        self.connected_priority = Some(connected_priority);
+        Ok(algorithm_is_done)
     }
 
     #[inline(always)]

@@ -43,13 +43,13 @@ License instead of this License. But first, please read <https://www.gnu.org/
 licenses /why-not-lgpl.html>.
  */
 
+use fltk::app::redraw;
 use fltk::*;
 use intersect2d::algorithm::AlgorithmData;
 use intersect2d::{scale_to_coordinate, to_lines, Error};
 use itertools::Itertools;
 use std::cell::RefCell;
 use std::rc::Rc;
-use fltk::app::redraw;
 
 const DRAW_TEXT: bool = true;
 

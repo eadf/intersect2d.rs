@@ -76,11 +76,11 @@ for (p, l) in results.iter() {
 
 Detection of self-intersecting geo::LineString:
 ```rust
-let coords = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
-let line_string: geo::LineString<f32> = coords.into_iter().collect();
+let coordinates = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
+let line_string = geo::LineString::from(coordinates);
 
 // Obviously this example only makes sense for LinesStrings with many points.
-// A simple brute force O(n²) intersection test will be faster than this O(log(n)n) 
+// A simple brute force O(n²) intersection test will be faster than this O(nlog(n)+k) 
 // sweep-line algorithm if n is small enough.  
 let result = AlgorithmData::<f32>::default()
     .with_ignore_end_point_intersections(true)?
