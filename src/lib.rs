@@ -476,7 +476,7 @@ where
     ///     (100., 200.),
     ///     (100., 100.),
     /// ]);
-    /// assert!(!line_string.is_self_intersecting(true).unwrap());
+    /// assert!(!line_string.is_self_intersecting().unwrap());
     ///
     /// let line_string = geo::LineString::from(vec![
     ///    (100., 100.),
@@ -486,7 +486,7 @@ where
     ///    (100., 200.),
     ///    (100., 100.),
     /// ]);
-    /// assert!(line_string.is_self_intersecting(true).unwrap());
+    /// assert!(line_string.is_self_intersecting().unwrap());
     /// ```
     fn is_self_intersecting(&self) -> Result<bool, Error> {
         Ok(!algorithm::AlgorithmData::<T>::default()
@@ -512,7 +512,7 @@ where
     ///     (100., 100.),
     /// ]);
     /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
-    ///     line_string.self_intersections(false,true).expect("err").collect();
+    ///     line_string.self_intersections(false).expect("err").collect();
     /// assert!(rv.is_empty());
     ///
     /// let line_string = geo::LineString::from(vec![
@@ -524,7 +524,7 @@ where
     ///    (100., 100.),
     /// ]);
     /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
-    ///     line_string.self_intersections(false,true).expect("err").collect();
+    ///     line_string.self_intersections(false).expect("err").collect();
     ///
     /// assert_eq!(line_string.0.len(),6);
     /// assert_eq!(rv.len(), 2);
