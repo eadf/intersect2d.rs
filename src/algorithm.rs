@@ -500,11 +500,12 @@ where
     }
 
     // This removes the results from the AlgorithmData structure
-    pub fn take_results(
+    pub fn take_results<'a>(
         &mut self,
-    ) -> Result<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>, super::Error> {
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, super::Error> where T:'a {
         if let Some(rv) = self.result.take() {
-            Ok(rv)
+            Ok(Box::new(rv.into_iter()
+                   .map(|x| (x.0.pos, x.1)),))
         } else {
             Err(super::Error::ResultsAlreadyTaken)
         }
@@ -706,7 +707,7 @@ where
 
     /// handles input event, returns true when done
     /// If interactive is set, the method will handle only one event for each call
-    pub fn compute(&mut self) -> Result<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>, super::Error> {
+    pub fn compute<'a>(&mut self) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, super::Error> where T:'a {
         // this could only happen if first run interactive, but just in case..
         if self.stop_at_first_intersection && self.result.as_ref().map_or(false, |x| !x.is_empty())
         {

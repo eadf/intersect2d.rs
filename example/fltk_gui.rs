@@ -58,7 +58,7 @@ type AlgoType = Rc<
     RefCell<(
         AlgorithmData<f64>,
         Option<
-            Result<rb_tree::RBMap<intersect2d::algorithm::SiteEventKey<f64>, Vec<usize>>, Error>,
+            Result<Vec<(geo::Coordinate<f64>, Vec<usize>)>,Error>,
         >,
     )>,
 >;
@@ -139,7 +139,7 @@ fn main() -> Result<(), Error> {
         }
         if let Some(Ok(r)) = alg_data_b.1.as_ref() {
             for (k, _v) in r.iter() {
-                draw::draw_circle(k.pos.x, k.pos.y, 2.0);
+                draw::draw_circle(k.x, k.y, 2.0);
             }
         }
         // draw found intersections, not reported yet
@@ -188,7 +188,18 @@ fn main() -> Result<(), Error> {
                         match data.0.compute_iterative() {
                             Ok(done) => {
                                 if done {
-                                    data.1 = Some(data.0.take_results());
+                                    match data.0.take_results() {
+                                        Ok(rv) => {
+                                            // convert the result iterator into a vec
+                                            // i don't know why .collect() does not work.
+                                            let mut res = Vec::<(geo::Coordinate<f64>, Vec<usize>)>::new();
+                                            for v in rv {
+                                                res.push(v)
+                                            }
+                                            data.1 = Some(Ok(res));
+                                        },
+                                        Err(err) => data.1 = Some(Err(err)),
+                                    }
                                 }
                                 done
                             }
@@ -199,7 +210,18 @@ fn main() -> Result<(), Error> {
                         }
                     } else {
                         // app_event_txt == "c"
-                        data.1 = Some(data.0.compute());
+                        match data.0.compute(){
+                            Ok(rv) => {
+                                // convert the result iterator into a vec
+                                // i don't know why .collect() does not work.
+                                let mut res = Vec::<(geo::Coordinate<f64>, Vec<usize>)>::new();
+                                for v in rv {
+                                    res.push(v)
+                                }
+                                data.1 = Some(Ok(res));
+                            },
+                            Err(err) => data.1  = Some(Err(err)),
+                        }
                         true
                     }
                 };
@@ -311,8 +333,8 @@ fn generate_test(data: AlgoType) {
             println!("let (k, i) = iter.next().unwrap();");
             println!(
                 "let intersection = SiteEventKey::new({},{});",
-                float_to_string(r.0.pos.x),
-                float_to_string(r.0.pos.y)
+                float_to_string(r.0.x),
+                float_to_string(r.0.y)
             );
             print!("let lines =[");
             for l in r.1.iter().sorted() {
@@ -342,7 +364,7 @@ fn print_results(data: AlgoType) {
         let intersections = data_1.iter().map(|x| x.1.iter()).flatten().count() / 2;
 
         for r in data_1.iter() {
-            print!("Intersection @({:.4},{:.4}) lines:", r.0.pos.x, r.0.pos.y);
+            print!("Intersection @({:.4},{:.4}) lines:", r.0.x, r.0.y);
             for l in r.1.iter() {
                 print!("{},", l);
             }

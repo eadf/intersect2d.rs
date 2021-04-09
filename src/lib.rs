@@ -316,7 +316,8 @@ where
     a.x * b.x + a.y * b.y
 }
 
-pub trait SelfIntersecting<T>
+/// Trait for self intersection where the end points are excluded
+pub trait SelfIntersectingExclusive<T>
 where
     T: Float
         + num_traits::ToPrimitive
@@ -327,22 +328,20 @@ where
     T::Epsilon: Copy,
 {
     /// Returns true if any line intersects any other line in the collection.
-    fn is_self_intersecting(&self, ignore_end_point_intersections: bool) -> Result<bool, Error>;
+    fn is_self_intersecting(&self) -> Result<bool, Error>;
 
     /// Returns a list of intersection points and the involved lines, if any intersections are found.
     /// 'stop_at_first_intersection' : will report at most one intersection
-    /// 'ignore_end_point_intersections' : will not report intersecting endpoints as intersections.
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
         stop_at_first_intersection: bool,
-        ignore_end_point_intersections: bool,
     ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
     where
         T: 'a;
 }
 
-impl<T> SelfIntersecting<T> for Vec<geo::Line<T>>
+impl<T> SelfIntersectingExclusive<T> for Vec<geo::Line<T>>
 where
     T: Float
         + num_traits::ToPrimitive
@@ -353,10 +352,9 @@ where
     T::Epsilon: Copy,
 {
     /// Returns true if the LineString is self intersecting.
-    /// The 'ignore_end_point_intersections' parameter must always be set to true when testing
     /// LineStrings.
     /// ```
-    /// # use intersect2d::SelfIntersecting;
+    /// # use intersect2d::SelfIntersectingExclusive;
     ///
     /// let lines: Vec<geo::Line<_>> = geo::LineString::from(vec![
     ///     (100., 100.),
@@ -365,7 +363,7 @@ where
     ///     (100., 200.),
     ///     (100., 100.),
     /// ]).lines().collect();
-    /// assert!(!lines.is_self_intersecting(true).unwrap());
+    /// assert!(!lines.is_self_intersecting().unwrap());
     ///
     /// let lines: Vec<geo::Line<_>> = geo::LineString::from(vec![
     ///    (100., 100.),
@@ -375,54 +373,39 @@ where
     ///    (100., 200.),
     ///    (100., 100.),
     /// ]).lines().collect();
-    /// assert!(lines.is_self_intersecting(true).unwrap());
+    /// assert!(lines.is_self_intersecting().unwrap());
     /// ```
-    fn is_self_intersecting(&self, ignore_end_point_intersections: bool) -> Result<bool, Error> {
+    fn is_self_intersecting(&self) -> Result<bool, Error> {
         // arbitrary selected break point,
         // todo: make some bench tests
         if self.len() < 10 {
-            if !ignore_end_point_intersections {
-                for l1 in self.iter().enumerate() {
-                    for l2 in self.iter().skip(l1.0) {
-                        // geo::intersects::Intersects intersects on all end-points
-                        if l1.1.intersects(l2) {
-                            return Ok(true);
-                        }
+            for l1 in self.iter().enumerate() {
+                for l2 in self.iter().skip(l1.0) {
+                    if ulps_eq_c(&l1.1.start, &l2.start)
+                        || ulps_eq_c(&l1.1.start, &l2.end)
+                        || ulps_eq_c(&l1.1.end, &l2.start)
+                        || ulps_eq_c(&l1.1.end, &l2.end)
+                    {
+                        continue;
                     }
-                }
-            } else {
-                for l1 in self.iter().enumerate() {
-                    for l2 in self.iter().skip(l1.0) {
-                        if ulps_eq_c(&l1.1.start, &l2.start)
-                            || ulps_eq_c(&l1.1.start, &l2.end)
-                            || ulps_eq_c(&l1.1.end, &l2.start)
-                            || ulps_eq_c(&l1.1.end, &l2.end)
-                        {
-                            if ignore_end_point_intersections {
-                                continue;
-                            } else {
-                                return Ok(true);
-                            }
-                        }
-                        if l1.1.intersects(l2) {
-                            return Ok(true);
-                        }
+                    if l1.1.intersects(l2) {
+                        return Ok(true);
                     }
                 }
             }
             return Ok(false);
         }
-        Ok(!algorithm::AlgorithmData::<T>::default()
-            .with_ignore_end_point_intersections(ignore_end_point_intersections)?
+        let mut rv = algorithm::AlgorithmData::<T>::default()
+            .with_ignore_end_point_intersections(true)?
             .with_stop_at_first_intersection(true)?
             .with_ref_lines(self.iter())?
-            .compute()?
-            .is_empty())
+            .compute()?;
+        Ok(rv.next().is_none())
     }
 
     /// Returns an iterator containing the found intersections.
     /// ```
-    /// # use intersect2d::SelfIntersecting;
+    /// # use intersect2d::SelfIntersectingExclusive;
     ///
     /// let lines : Vec<geo::Line<_>>= geo::LineString::from(vec![
     ///     (100., 100.),
@@ -433,7 +416,7 @@ where
     /// ]).lines().collect();
     ///
     /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
-    ///     lines.self_intersections(false,true).expect("err").collect();
+    ///     lines.self_intersections(false).expect("err").collect();
     /// assert!(rv.is_empty());
     ///
     /// let lines : Vec<geo::Line<_>> = geo::LineString::from(vec![
@@ -445,7 +428,7 @@ where
     ///    (100., 100.),
     /// ]).lines().collect();
     /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
-    ///     lines.self_intersections(false,true).expect("err").collect();
+    ///     lines.self_intersections(false).expect("err").collect();
     ///
     /// assert_eq!(rv.len(), 2);
     /// assert_eq!(rv[0].1, vec!(0,3));
@@ -457,25 +440,20 @@ where
     fn self_intersections<'a>(
         &self,
         stop_at_first_intersection: bool,
-        ignore_end_point_intersections: bool,
     ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
     where
         T: 'a,
     {
         // Todo: add brute force test if n is small enough
-        Ok(Box::new(
-            algorithm::AlgorithmData::<T>::default()
-                .with_ignore_end_point_intersections(ignore_end_point_intersections)?
-                .with_stop_at_first_intersection(stop_at_first_intersection)?
-                .with_ref_lines(self.iter())?
-                .compute()?
-                .into_iter()
-                .map(|x| (x.0.pos, x.1)),
-        ))
+        Ok(algorithm::AlgorithmData::<T>::default()
+            .with_ignore_end_point_intersections(true)?
+            .with_stop_at_first_intersection(stop_at_first_intersection)?
+            .with_ref_lines(self.iter())?
+            .compute()?)
     }
 }
 
-impl<T> SelfIntersecting<T> for geo::LineString<T>
+impl<T> SelfIntersectingExclusive<T> for geo::LineString<T>
 where
     T: Float
         + num_traits::ToPrimitive
@@ -489,7 +467,7 @@ where
     /// The 'ignore_end_point_intersections' parameter must always be set to true when testing
     /// LineStrings.
     /// ```
-    /// # use intersect2d::SelfIntersecting;
+    /// # use intersect2d::SelfIntersectingExclusive;
     ///
     /// let line_string = geo::LineString::from(vec![
     ///     (100., 100.),
@@ -510,29 +488,20 @@ where
     /// ]);
     /// assert!(line_string.is_self_intersecting(true).unwrap());
     /// ```
-    fn is_self_intersecting(&self, ignore_end_point_intersections: bool) -> Result<bool, Error> {
-        if !ignore_end_point_intersections {
-            // It does not make sense to *not* ignore end point intersections in LineStrings
-            return Err(Error::InvalidSearchParameter);
-        }
+    fn is_self_intersecting(&self) -> Result<bool, Error> {
         Ok(!algorithm::AlgorithmData::<T>::default()
             .with_ignore_end_point_intersections(true)?
             .with_stop_at_first_intersection(true)?
             .with_lines(self.lines())?
             .compute()?
-            .is_empty())
-        //println!("ls :{:?}", self.lines().collect::<Vec<geo::Line<_>>>());
-        //println!("rv : {:?}, {}", rv, rv.len());
-        //for r in rv.iter() {
-        //    println!("rv @:{:?}, {:?}", r.0.pos, r.1);
-        //}
+            .next().is_none())
     }
 
     /// Returns an iterator containing the found intersections.
     /// The 'ignore_end_point_intersections' parameter must always be set to true when testing
     /// LineStrings.
     /// ```
-    /// # use intersect2d::SelfIntersecting;
+    /// # use intersect2d::SelfIntersectingExclusive;
     ///
     /// let line_string = geo::LineString::from(vec![
     ///     (100., 100.),
@@ -567,24 +536,15 @@ where
     fn self_intersections<'a>(
         &self,
         stop_at_first_intersection: bool,
-        ignore_end_point_intersections: bool,
     ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
     where
         T: 'a,
     {
-        if !ignore_end_point_intersections {
-            // It does not make sense to *not* ignore end point intersections in LineStrings
-            return Err(Error::InvalidSearchParameter);
-        }
-        Ok(Box::new(
-            algorithm::AlgorithmData::<T>::default()
-                .with_ignore_end_point_intersections(ignore_end_point_intersections)?
-                .with_stop_at_first_intersection(stop_at_first_intersection)?
-                .with_lines(self.lines())?
-                .compute()?
-                .into_iter()
-                .map(|x| (x.0.pos, x.1)),
-        ))
+        algorithm::AlgorithmData::<T>::default()
+            .with_ignore_end_point_intersections(true)?
+            .with_stop_at_first_intersection(stop_at_first_intersection)?
+            .with_lines(self.lines())?
+            .compute()
     }
 }
 

@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use geo::Coordinate;
 use geo::LineString;
-use intersect2d::SelfIntersecting;
+use intersect2d::SelfIntersectingExclusive;
 
 #[cfg(test)]
 fn bench_1(c: &mut Criterion) {

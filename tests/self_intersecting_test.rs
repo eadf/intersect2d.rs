@@ -1,4 +1,4 @@
-use intersect2d::SelfIntersecting;
+use intersect2d::SelfIntersectingExclusive;
 
 #[test]
 fn self_intersection_1() {
@@ -9,8 +9,7 @@ fn self_intersection_1() {
         (100., 200.),
         (100., 100.),
     ]);
-    println!("{:?}", line_string.is_self_intersecting(true));
-    assert!(!line_string.is_self_intersecting(true).unwrap());
+    assert!(!line_string.is_self_intersecting().unwrap());
 }
 
 #[test]
@@ -23,6 +22,5 @@ fn self_intersection_2() {
         (100., 200.),
         (100., 100.),
     ]);
-    println!("{:?}", line_string.is_self_intersecting(true));
-    assert!(line_string.is_self_intersecting(true).unwrap());
+    assert!(line_string.is_self_intersecting().unwrap());
 }
