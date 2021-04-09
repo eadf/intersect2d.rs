@@ -95,12 +95,13 @@ where
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         if approx::ulps_eq!(&self.pos.y, &other.pos.y) {
             if approx::ulps_eq!(&self.pos.x, &other.pos.x) {
-                return Some(cmp::Ordering::Equal);
+                Some(cmp::Ordering::Equal)
             } else {
-                return Some(OrderedFloat(self.pos.x).cmp(&OrderedFloat(other.pos.x)));
+                Some(OrderedFloat(self.pos.x).cmp(&OrderedFloat(other.pos.x)))
             }
+        } else {
+            Some(OrderedFloat(self.pos.y).cmp(&OrderedFloat(other.pos.y)))
         }
-        Some(OrderedFloat(self.pos.y).cmp(&OrderedFloat(other.pos.y)))
     }
 }
 
@@ -499,7 +500,8 @@ where
         &self.result
     }
 
-    // This removes the results from the AlgorithmData structure
+    /// This removes the results from the AlgorithmData structure
+    #[allow(clippy::type_complexity)]
     pub fn take_results<'a>(
         &mut self,
     ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, super::Error>
@@ -709,6 +711,7 @@ where
 
     /// handles input event, returns true when done
     /// If interactive is set, the method will handle only one event for each call
+    #[allow(clippy::type_complexity)]
     pub fn compute<'a>(
         &mut self,
     ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, super::Error>
