@@ -316,7 +316,7 @@ where
     a.x * b.x + a.y * b.y
 }
 
-/// Trait for self intersection where the end points are excluded
+/// Trait for self intersection tests where the end points are excluded
 pub trait SelfIntersectingExclusive<T>
 where
     T: Float
@@ -331,11 +331,34 @@ where
     fn is_self_intersecting(&self) -> Result<bool, Error>;
 
     /// Returns a list of intersection points and the involved lines, if any intersections are found.
-    /// 'stop_at_first_intersection' : will report at most one intersection
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-        stop_at_first_intersection: bool,
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
+    where
+        T: 'a;
+}
+
+/// Trait for self intersection tests where the end points are included
+pub trait SelfIntersectingInclusive<T>
+where
+    T: Float
+        + num_traits::ToPrimitive
+        + geo::GeoFloat
+        + geo::CoordFloat
+        + approx::AbsDiffEq
+        + approx::UlpsEq,
+    T::Epsilon: Copy,
+{
+    /// Returns true if any line intersects any other line in the collection.
+    /// If the end points are identical they will be reported too.
+    fn is_self_intersecting_inclusive(&self) -> Result<bool, Error>;
+
+    /// Returns a list of intersection points and the involved lines, if any intersections are found.
+    /// If the end points are identical they will be reported too.
+    #[allow(clippy::type_complexity)]
+    fn self_intersections_inclusive<'a>(
+        &self,
     ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
     where
         T: 'a;
@@ -376,9 +399,8 @@ where
     /// assert!(lines.is_self_intersecting().unwrap());
     /// ```
     fn is_self_intersecting(&self) -> Result<bool, Error> {
-        // arbitrary selected break point,
-        // todo: make some bench tests
-        if self.len() < 10 {
+        // at around >25 line segments the sweep-line algorithm is faster
+        if self.len() < 25 {
             for l1 in self.iter().enumerate() {
                 for l2 in self.iter().skip(l1.0) {
                     if ulps_eq_c(&l1.1.start, &l2.start)
@@ -393,19 +415,22 @@ where
                     }
                 }
             }
-            return Ok(false);
+            Ok(false)
+        } else {
+            Ok(!algorithm::AlgorithmData::<T>::default()
+                .with_ignore_end_point_intersections(true)?
+                .with_stop_at_first_intersection(true)?
+                .with_ref_lines(self.iter())?
+                .compute()?
+                .next()
+                .is_none())
         }
-        let mut rv = algorithm::AlgorithmData::<T>::default()
-            .with_ignore_end_point_intersections(true)?
-            .with_stop_at_first_intersection(true)?
-            .with_ref_lines(self.iter())?
-            .compute()?;
-        Ok(rv.next().is_none())
     }
 
     /// Returns an iterator containing the found intersections.
     /// ```
     /// # use intersect2d::SelfIntersectingExclusive;
+    /// # use intersect2d::ulps_eq_c;
     ///
     /// let lines : Vec<geo::Line<_>>= geo::LineString::from(vec![
     ///     (100., 100.),
@@ -416,7 +441,7 @@ where
     /// ]).lines().collect();
     ///
     /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
-    ///     lines.self_intersections(false).expect("err").collect();
+    ///     lines.self_intersections().expect("err").collect();
     /// assert!(rv.is_empty());
     ///
     /// let lines : Vec<geo::Line<_>> = geo::LineString::from(vec![
@@ -428,28 +453,49 @@ where
     ///    (100., 100.),
     /// ]).lines().collect();
     /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
-    ///     lines.self_intersections(false).expect("err").collect();
+    ///     lines.self_intersections().expect("err").collect();
     ///
     /// assert_eq!(rv.len(), 2);
-    /// assert_eq!(rv[0].1, vec!(0,3));
-    /// assert_eq!(rv[0].0, geo::Coordinate{x: 133.33333333333334, y: 100.0});
-    /// assert_eq!(rv[1].1, vec!(0,2));
-    /// assert_eq!(rv[1].0, geo::Coordinate{x: 166.66666666666666, y: 100.0});
+    /// assert_eq!(rv[0].1, vec!(0_usize, 2));
+    /// assert!(ulps_eq_c(&rv[0].0, &geo::Coordinate{x: 166.66666666666666, y: 100.0}));
+    /// assert_eq!(rv[1].1, vec!(0_usize, 3));
+    /// assert!(ulps_eq_c(&rv[1].0, &geo::Coordinate{x: 133.33333333333333, y: 100.0}));
     /// ```
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-        stop_at_first_intersection: bool,
     ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
     where
         T: 'a,
     {
-        // Todo: add brute force test if n is small enough
-        Ok(algorithm::AlgorithmData::<T>::default()
-            .with_ignore_end_point_intersections(true)?
-            .with_stop_at_first_intersection(stop_at_first_intersection)?
-            .with_ref_lines(self.iter())?
-            .compute()?)
+        if self.len() < 25 {
+            // at around <25 line segments the brute force test is faster
+            let mut rv = Vec::<(geo::Coordinate<T>, Vec<usize>)>::new();
+            for l1 in self.iter().enumerate() {
+                for l2 in self.iter().enumerate().skip(l1.0) {
+                    if ulps_eq_c(&l1.1.start, &l2.1.start)
+                        || ulps_eq_c(&l1.1.start, &l2.1.end)
+                        || ulps_eq_c(&l1.1.end, &l2.1.start)
+                        || ulps_eq_c(&l1.1.end, &l2.1.end)
+                    {
+                        continue;
+                    }
+                    if let Some(i) = intersect(l1.1, l2.1) {
+                        rv.push((i.single(), vec![l1.0, l2.0]));
+                    }
+                }
+            }
+            // This will only return intersections between two lines at a single point
+            // If more than that are intersecting it will be reported once for each pair.
+            Ok(Box::new(rv.into_iter()))
+        } else {
+            // at around >25 line segments the sweep-line algorithm is faster
+            algorithm::AlgorithmData::<T>::default()
+                .with_ignore_end_point_intersections(true)?
+                .with_stop_at_first_intersection(false)?
+                .with_ref_lines(self.iter())?
+                .compute()
+        }
     }
 }
 
@@ -489,13 +535,32 @@ where
     /// assert!(line_string.is_self_intersecting().unwrap());
     /// ```
     fn is_self_intersecting(&self) -> Result<bool, Error> {
-        Ok(!algorithm::AlgorithmData::<T>::default()
-            .with_ignore_end_point_intersections(true)?
-            .with_stop_at_first_intersection(true)?
-            .with_lines(self.lines())?
-            .compute()?
-            .next()
-            .is_none())
+        // at around >25 line segments the sweep-line algorithm is faster
+        if self.0.len() < 25 {
+            for l1 in self.lines().enumerate() {
+                for l2 in self.lines().skip(l1.0) {
+                    if ulps_eq_c(&l1.1.start, &l2.start)
+                        || ulps_eq_c(&l1.1.start, &l2.end)
+                        || ulps_eq_c(&l1.1.end, &l2.start)
+                        || ulps_eq_c(&l1.1.end, &l2.end)
+                    {
+                        continue;
+                    }
+                    if l1.1.intersects(&l2) {
+                        return Ok(true);
+                    }
+                }
+            }
+            Ok(false)
+        } else {
+            Ok(!algorithm::AlgorithmData::<T>::default()
+                .with_ignore_end_point_intersections(true)?
+                .with_stop_at_first_intersection(true)?
+                .with_lines(self.lines())?
+                .compute()?
+                .next()
+                .is_none())
+        }
     }
 
     /// Returns an iterator containing the found intersections.
@@ -503,6 +568,7 @@ where
     /// LineStrings.
     /// ```
     /// # use intersect2d::SelfIntersectingExclusive;
+    /// # use intersect2d::ulps_eq_c;
     ///
     /// let line_string = geo::LineString::from(vec![
     ///     (100., 100.),
@@ -512,7 +578,7 @@ where
     ///     (100., 100.),
     /// ]);
     /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
-    ///     line_string.self_intersections(false).expect("err").collect();
+    ///     line_string.self_intersections().expect("err").collect();
     /// assert!(rv.is_empty());
     ///
     /// let line_string = geo::LineString::from(vec![
@@ -524,28 +590,50 @@ where
     ///    (100., 100.),
     /// ]);
     /// let rv :Vec<(geo::Coordinate<_>,Vec<usize>)> =
-    ///     line_string.self_intersections(false).expect("err").collect();
+    ///     line_string.self_intersections().expect("err").collect();
     ///
     /// assert_eq!(line_string.0.len(),6);
     /// assert_eq!(rv.len(), 2);
-    /// assert_eq!(rv[0].1, vec!(0,3));
-    /// assert_eq!(rv[0].0, geo::Coordinate{x: 133.33333333333334, y: 100.0});
-    /// assert_eq!(rv[1].1, vec!(0,2));
-    /// assert_eq!(rv[1].0, geo::Coordinate{x: 166.66666666666666, y: 100.0});
+    /// assert_eq!(rv[0].1, vec!(0_usize,2));
+    /// assert!(ulps_eq_c(&rv[0].0, &geo::Coordinate{x: 166.66666666666666, y: 100.0}));
+    /// assert_eq!(rv[1].1, vec!(0_usize,3));
+    /// assert!(ulps_eq_c(&rv[1].0, &geo::Coordinate{x: 133.33333333333334, y: 100.0}));
     /// ```
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-        stop_at_first_intersection: bool,
     ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
     where
         T: 'a,
     {
-        algorithm::AlgorithmData::<T>::default()
-            .with_ignore_end_point_intersections(true)?
-            .with_stop_at_first_intersection(stop_at_first_intersection)?
-            .with_lines(self.lines())?
-            .compute()
+        if self.0.len() < 25 {
+            // at around <25 line segments the brute force test is faster
+            let mut rv = Vec::<(geo::Coordinate<T>, Vec<usize>)>::new();
+            for l1 in self.lines().enumerate() {
+                for l2 in self.lines().enumerate().skip(l1.0) {
+                    if ulps_eq_c(&l1.1.start, &l2.1.start)
+                        || ulps_eq_c(&l1.1.start, &l2.1.end)
+                        || ulps_eq_c(&l1.1.end, &l2.1.start)
+                        || ulps_eq_c(&l1.1.end, &l2.1.end)
+                    {
+                        continue;
+                    }
+                    if let Some(i) = intersect(&l1.1, &l2.1) {
+                        rv.push((i.single(), vec![l1.0, l2.0]));
+                    }
+                }
+            }
+            // This will only return intersections between two lines at a single point
+            // If more than that are intersecting it will be reported once for each pair.
+            Ok(Box::new(rv.into_iter()))
+        } else {
+            // at around >25 line segments the sweep-line algorithm is faster
+            algorithm::AlgorithmData::<T>::default()
+                .with_ignore_end_point_intersections(true)?
+                .with_stop_at_first_intersection(false)?
+                .with_lines(self.lines())?
+                .compute()
+        }
     }
 }
 
