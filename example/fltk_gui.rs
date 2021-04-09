@@ -57,9 +57,7 @@ const DRAW_TEXT: bool = true;
 type AlgoType = Rc<
     RefCell<(
         AlgorithmData<f64>,
-        Option<
-            Result<Vec<(geo::Coordinate<f64>, Vec<usize>)>,Error>,
-        >,
+        Option<Result<Vec<(geo::Coordinate<f64>, Vec<usize>)>, Error>>,
     )>,
 >;
 
@@ -192,12 +190,13 @@ fn main() -> Result<(), Error> {
                                         Ok(rv) => {
                                             // convert the result iterator into a vec
                                             // i don't know why .collect() does not work.
-                                            let mut res = Vec::<(geo::Coordinate<f64>, Vec<usize>)>::new();
+                                            let mut res =
+                                                Vec::<(geo::Coordinate<f64>, Vec<usize>)>::new();
                                             for v in rv {
                                                 res.push(v)
                                             }
                                             data.1 = Some(Ok(res));
-                                        },
+                                        }
                                         Err(err) => data.1 = Some(Err(err)),
                                     }
                                 }
@@ -210,7 +209,7 @@ fn main() -> Result<(), Error> {
                         }
                     } else {
                         // app_event_txt == "c"
-                        match data.0.compute(){
+                        match data.0.compute() {
                             Ok(rv) => {
                                 // convert the result iterator into a vec
                                 // i don't know why .collect() does not work.
@@ -219,8 +218,8 @@ fn main() -> Result<(), Error> {
                                     res.push(v)
                                 }
                                 data.1 = Some(Ok(res));
-                            },
-                            Err(err) => data.1  = Some(Err(err)),
+                            }
+                            Err(err) => data.1 = Some(Err(err)),
                         }
                         true
                     }

@@ -12,11 +12,10 @@ use num_traits::Float;
 #[test]
 fn two_connected_1() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 2] = [[200., 200., 300., 300.], [400., 200., 300., 300.]];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     //No result!
     assert!(iter.next().is_none());
     Ok(())
@@ -25,15 +24,14 @@ fn two_connected_1() -> Result<(), intersect2d::Error> {
 #[test]
 fn two_connected_2() -> Result<(), intersect2d::Error> {
     let _l: [[f64; 4]; 2] = [[200., 200., 300., 300.], [400., 200., 300., 300.]];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
+    let intersection = geo::Coordinate::from((300., 300.));
     let lines = [0, 1];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -60,7 +58,7 @@ fn two_connected_3() -> Result<(), intersect2d::Error> {
         .with_ignore_end_point_intersections(false)?
         .with_lines(_l.into_iter())?
         .compute()?;
-    for (p, l) in results.iter() {
+    for (p, l) in results {
         println!("Intersection @{:?} Involved lines:{:?}", p, l);
     }
     Ok(())
@@ -75,15 +73,14 @@ fn connected_3_1() -> Result<(), intersect2d::Error> {
         [400., 200., 300., 300.],
         [200., 300., 300., 300.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
         .with_lines(to_lines(&_l).into_iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
+    let intersection = geo::Coordinate::from((300., 300.));
     let lines = [0, 1, 2];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -102,7 +99,7 @@ fn connected_3_1_linestring() -> Result<(), intersect2d::Error> {
         .with_stop_at_first_intersection(true)?
         .with_lines(line_string.lines())?
         .compute()?;
-    for (p, l) in result.iter() {
+    for (p, l) in result {
         println!("Intersection detected @{:?} Involved lines:{:?}", p, l);
     }
     Ok(())
@@ -117,11 +114,10 @@ fn connected_3_2() -> Result<(), intersect2d::Error> {
         [400., 200., 300., 300.],
         [200., 300., 300., 300.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     //No result!
     assert!(iter.next().is_none());
     Ok(())
@@ -136,15 +132,14 @@ fn connected_3_3() -> Result<(), intersect2d::Error> {
         [400., 200., 300., 300.],
         [200., 300., 400., 300.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
+    let intersection = geo::Coordinate::from((300., 300.));
     let lines = [0, 1, 2];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -161,15 +156,14 @@ fn connected_3_4() -> Result<(), intersect2d::Error> {
         [400., 200., 300., 300.],
         [200., 300., 400., 300.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
+    let intersection = geo::Coordinate::from((300., 300.));
     let lines = [0, 1, 2];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -189,15 +183,14 @@ fn connected_3_5() -> Result<(), intersect2d::Error> {
         [200., 300., 400., 300.],
     ];
     let _l = to_lines(&_l);
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(_l.iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
+    let intersection = geo::Coordinate::from((300., 300.));
     let lines = [0, 1, 2, 3, 4, 5];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -225,11 +218,10 @@ fn connected_3_6() -> Result<(), intersect2d::Error> {
         [400., 200., 300., 300.],
         [200., 300., 300., 300.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     //No result!
     assert!(iter.next().is_none());
     Ok(())
@@ -247,15 +239,14 @@ fn connected_3_7() -> Result<(), intersect2d::Error> {
         [200., 300., 300., 300.],
     ];
     let _l = to_lines(&_l);
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
         .with_ref_lines(_l.iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(200., 200.);
+    let intersection = geo::Coordinate::from((200., 200.));
     let lines = [0, 3];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -270,9 +261,9 @@ fn connected_3_7() -> Result<(), intersect2d::Error> {
         }
     }
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(400., 200.);
+    let intersection = geo::Coordinate::from((400., 200.));
     let lines = [1, 4];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -287,9 +278,9 @@ fn connected_3_7() -> Result<(), intersect2d::Error> {
         }
     }
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(200., 300.);
+    let intersection = geo::Coordinate::from((200., 300.));
     let lines = [2, 5];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -304,9 +295,9 @@ fn connected_3_7() -> Result<(), intersect2d::Error> {
         }
     }
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
+    let intersection = geo::Coordinate::from((300., 300.));
     let lines = [0, 1, 2, 3, 4, 5];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -334,15 +325,14 @@ fn chevron_1() -> Result<(), intersect2d::Error> {
         [400., 250., 290., 350.],
         [200., 250., 300., 400.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 340.9090909090909);
+    let intersection = geo::Coordinate::from((300., 340.9090909090909));
     let lines = [2, 3];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -361,31 +351,30 @@ fn chevron_2() -> Result<(), intersect2d::Error> {
         [400., 250., 290., 350.],
         [200., 250., 300., 400.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(200., 250.);
+    let intersection = geo::Coordinate::from((200., 250.));
     let lines = [2, 4];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
+    let intersection = geo::Coordinate::from((300., 300.));
     let lines = [0, 1];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 340.9090909090909);
+    let intersection = geo::Coordinate::from((300., 340.9090909090909));
     let lines = [2, 3];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -410,15 +399,14 @@ fn chevron_3() -> Result<(), intersect2d::Error> {
         [200., 250., 300., 400.],
     ];
     let _l = to_lines(&_l);
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(_l.iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 340.9090909090909);
+    let intersection = geo::Coordinate::from((300., 340.9090909090909));
     let lines = [2, 3, 7, 8];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -461,39 +449,38 @@ fn connected_5_1() -> Result<(), intersect2d::Error> {
             743.9231012048832,
         ],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_lines(to_lines(&_l).into_iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(340.41232037028954, 300.);
+    let intersection = geo::Coordinate::from((340.41232037028954, 300.));
     let lines = [0, 2];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(371.1324865405187, 300.);
+    let intersection = geo::Coordinate::from((371.1324865405187, 300.));
     let lines = [0, 3];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(391.18365096457677, 300.);
+    let intersection = geo::Coordinate::from((391.18365096457677, 300.));
     let lines = [0, 4];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(400., 350.);
+    let intersection = geo::Coordinate::from((400., 350.));
     let lines = [1, 2, 3, 4];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -517,31 +504,30 @@ fn connected_7_1() -> Result<(), intersect2d::Error> {
             385.5050358314172,
         ],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 300.);
+    let intersection = geo::Coordinate::from((300., 300.));
     let lines = [0, 1];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(400., 300.);
+    let intersection = geo::Coordinate::from((400., 300.));
     let lines = [3, 4];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(200., 372.7940468532405);
+    let intersection = geo::Coordinate::from((200., 372.7940468532405));
     let lines = [2, 4];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -567,47 +553,46 @@ fn connected_7_2() -> Result<(), intersect2d::Error> {
             385.5050358314172,
         ],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(400., 300.);
+    let intersection = geo::Coordinate::from((400., 300.));
     let lines = [5, 6];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(308.277190154128, 333.3843725871564);
+    let intersection = geo::Coordinate::from((308.277190154128, 333.3843725871564));
     let lines = [3, 6];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(296.45573387734373, 337.6870307975852);
+    let intersection = geo::Coordinate::from((296.45573387734373, 337.6870307975852));
     let lines = [2, 6];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(300., 340.9090909090909);
+    let intersection = geo::Coordinate::from((300., 340.9090909090909));
     let lines = [2, 3];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(265.8776865616534, 348.81652984248007);
+    let intersection = geo::Coordinate::from((265.8776865616534, 348.81652984248007));
     let lines = [4, 6];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -635,103 +620,102 @@ fn complex_1() -> Result<(), intersect2d::Error> {
         [440., 320., 400., 520.],
         [480., 320., 360., 520.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(36.946208836282665, 54.39458572600492);
+    let intersection = geo::Coordinate::from((36.946208836282665, 54.39458572600492));
     let lines = [2, 3];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(250., 250.);
+    let intersection = geo::Coordinate::from((250., 250.));
     let lines = [5, 6, 9];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(209.50863723608447, 290.49136276391556);
+    let intersection = geo::Coordinate::from((209.50863723608447, 290.49136276391556));
     let lines = [2, 6];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(250., 350.);
+    let intersection = geo::Coordinate::from((250., 350.));
     let lines = [7, 9];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(350., 350.);
+    let intersection = geo::Coordinate::from((350., 350.));
     let lines = [8, 10];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(378., 350.);
+    let intersection = geo::Coordinate::from((378., 350.));
     let lines = [8, 11];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(406., 350.);
+    let intersection = geo::Coordinate::from((406., 350.));
     let lines = [8, 12];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(434., 350.);
+    let intersection = geo::Coordinate::from((434., 350.));
     let lines = [8, 13];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(462., 350.);
+    let intersection = geo::Coordinate::from((462., 350.));
     let lines = [8, 14];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(248.75121951219512, 351.2487804878049);
+    let intersection = geo::Coordinate::from((248.75121951219512, 351.2487804878049));
     let lines = [4, 7];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(250., 353.55555555555554);
+    let intersection = geo::Coordinate::from((250., 353.55555555555554));
     let lines = [4, 9];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(420., 420.);
+    let intersection = geo::Coordinate::from((420., 420.));
     let lines = [10, 11, 12, 13, 14];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -763,6 +747,6 @@ fn a_test() -> Result<(), intersect2d::Error> {
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
 
-    assert_eq!(result.len(), 2);
+    assert_eq!(result.count(), 2);
     Ok(())
 }

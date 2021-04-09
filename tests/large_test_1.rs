@@ -64,64 +64,63 @@ fn large_test_1() -> Result<(), intersect2d::Error> {
         [617., 342., 594., 427.],
         [675., 292., 617., 342.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
 
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(69.75440198728721, 130.2933440490977);
+    let intersection = geo::Coordinate::<f64>::from((69.75440198728721, 130.2933440490977));
     let lines = [19, 27];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(144.1495431155042, 145.01238272392771);
+    let intersection = geo::Coordinate::<f64>::from((144.1495431155042, 145.01238272392771));
     let lines = [9, 27];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(187.96392821715213, 153.68103526016773);
+    let intersection = geo::Coordinate::<f64>::from((187.96392821715213, 153.68103526016773));
     let lines = [27, 41];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(137.45685279187816, 154.50507614213197);
+    let intersection = geo::Coordinate::<f64>::from((137.45685279187816, 154.50507614213197));
     let lines = [9, 26];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(496.1979695431472, 214.66497461928935);
+    let intersection = geo::Coordinate::<f64>::from((496.1979695431472, 214.66497461928935));
     let lines = [4, 27];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(179.23048840651208, 443.0525900345338);
+    let intersection = geo::Coordinate::<f64>::from((179.23048840651208, 443.0525900345338));
     let lines = [20, 44];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(100.87671116401667, 475.24445200238074);
+    let intersection = geo::Coordinate::<f64>::from((100.87671116401667, 475.24445200238074));
     let lines = [7, 20];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
@@ -490,136 +489,135 @@ fn large_test_2() -> Result<(), intersect2d::Error> {
         [735., 105., 415., 586.],
         [134., 520., 415., 586.],
     ];
-    let result = AlgorithmData::<f64>::default()
+    let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
         .with_ref_lines(to_lines(&_l).iter())?
         .compute()?;
-    let mut iter = result.iter();
 
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(694.1658119658119, 183.6581634889327);
+    let intersection = geo::Coordinate::<f64>::from((694.1658119658119, 183.6581634889327));
     let lines = [76, 353];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(682.2641978034108, 184.26850267674814);
+    let intersection = geo::Coordinate::<f64>::from((682.2641978034108, 184.26850267674814));
     let lines = [76, 354];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(636.8320752958717, 252.55866182089275);
+    let intersection = geo::Coordinate::<f64>::from((636.8320752958717, 252.55866182089275));
     let lines = [93, 354];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(582.8097622027534, 333.76095118898627);
+    let intersection = geo::Coordinate::<f64>::from((582.8097622027534, 333.76095118898627));
     let lines = [144, 354];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(614.8802683640117, 336.38448305522104);
+    let intersection = geo::Coordinate::<f64>::from((614.8802683640117, 336.38448305522104));
     let lines = [157, 353];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(577.1267168808154, 342.3032786885244);
+    let intersection = geo::Coordinate::<f64>::from((577.1267168808154, 342.3032786885244));
     let lines = [167, 354];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(544.0163545863949, 392.07229201232525);
+    let intersection = geo::Coordinate::<f64>::from((544.0163545863949, 392.07229201232525));
     let lines = [175, 354];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(569.5389521070401, 423.7246467425284);
+    let intersection = geo::Coordinate::<f64>::from((569.5389521070401, 423.7246467425284));
     let lines = [194, 353];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(463.5741644247869, 512.9869590989922);
+    let intersection = geo::Coordinate::<f64>::from((463.5741644247869, 512.9869590989922));
     let lines = [223, 354];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(498.7483691984704, 560.0872759991003);
+    let intersection = geo::Coordinate::<f64>::from((498.7483691984704, 560.0872759991003));
     let lines = [236, 353];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(199.25806451612902, 562.);
+    let intersection = geo::Coordinate::<f64>::from((199.25806451612902, 562.));
     let lines = [241, 352];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(312.8181818181818, 562.);
+    let intersection = geo::Coordinate::<f64>::from((312.8181818181818, 562.));
     let lines = [241, 355];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(234.0947704777492, 584.4208557400046);
+    let intersection = geo::Coordinate::<f64>::from((234.0947704777492, 584.4208557400046));
     let lines = [245, 352];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(273.9057162185016, 610.043125317098);
+    let intersection = geo::Coordinate::<f64>::from((273.9057162185016, 610.043125317098));
     let lines = [280, 352];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(440.84729981378024, 671.6210667048657);
+    let intersection = geo::Coordinate::<f64>::from((440.84729981378024, 671.6210667048657));
     let lines = [305, 353];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()
     );
     let (k, i) = iter.next().unwrap();
-    let intersection = SiteEventKey::new(372.37289663461536, 673.4164663461538);
+    let intersection = geo::Coordinate::<f64>::from((372.37289663461536, 673.4164663461538));
     let lines = [311, 352];
-    assert_eq!(&intersection, k);
+    assert_eq!(intersection, k);
     assert_eq!(
         i.iter().collect::<Vec<&usize>>().sort(),
         lines.iter().collect::<Vec<&usize>>().sort()

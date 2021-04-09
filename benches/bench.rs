@@ -20,7 +20,7 @@ fn bench_1(c: &mut Criterion) {
 
     c.bench_function("bench1", |b| {
         b.iter(|| {
-            assert!(!coordinates.is_self_intersecting(true).unwrap_or(false));
+            assert!(!coordinates.is_self_intersecting().unwrap_or(false));
         })
     });
 }

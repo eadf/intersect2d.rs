@@ -494,7 +494,8 @@ where
             .with_stop_at_first_intersection(true)?
             .with_lines(self.lines())?
             .compute()?
-            .next().is_none())
+            .next()
+            .is_none())
     }
 
     /// Returns an iterator containing the found intersections.
