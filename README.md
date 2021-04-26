@@ -89,15 +89,42 @@ for (p, l) in result.iter() {
     println!("Intersection detected @{:?} Involved lines:{:?}", p, l);
 }
 ```
-or 
+or using the `SelfIntersectingExclusive` trait:
 ```rust
+// SelfIntersectingExclusive does not report endpoint intersections
 use intersect2d::SelfIntersectingExclusive;
 
 let coordinates = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
 let line_string = geo::LineString::from(coordinates);
 
-if line_string.is_self_intersecting()?{
+if line_string.is_self_intersecting()? {
     println!("Intersection detected");
+}
+
+for intersections in line_string.self_intersections()? {
+    println!("Intersection: {:?}", intersections);
+}
+```
+
+You can also check a bunch of `geo::Line` for self intersections using the `SelfIntersectingInclusive` trait:
+```rust
+// SelfIntersectingInclusive reports endpoint intersections
+use intersect2d::SelfIntersectingInclusive;
+let lines = vec![
+    geo::Line::new(
+        geo::Coordinate { x: 200., y: 200. },
+        geo::Coordinate { x: 350., y: 300. },
+    ),
+    geo::Line::new(
+        geo::Coordinate { x: 400., y: 200. },
+        geo::Coordinate { x: 250., y: 300. },
+    ),
+];
+if lines.is_self_intersecting_inclusive()? {
+    println!("Intersection detected");
+}
+for intersections in lines.self_intersections_inclusive()? {
+    println!("Intersection: {:?}", intersections);
 }
 ```
 
