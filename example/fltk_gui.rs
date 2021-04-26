@@ -43,10 +43,9 @@ License instead of this License. But first, please read <https://www.gnu.org/
 licenses /why-not-lgpl.html>.
  */
 
-use fltk::app::redraw;
-use fltk::*;
+use fltk::{app, draw, enums, prelude::*, window};
 use intersect2d::algorithm::AlgorithmData;
-use intersect2d::{scale_to_coordinate, to_lines, Error};
+use intersect2d::{scale_to_coordinate, to_lines, IntersectError};
 use itertools::Itertools;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -57,18 +56,18 @@ const DRAW_TEXT: bool = true;
 type AlgoType = Rc<
     RefCell<(
         AlgorithmData<f64>,
-        Option<Result<Vec<(geo::Coordinate<f64>, Vec<usize>)>, Error>>,
+        Option<Result<Vec<(geo::Coordinate<f64>, Vec<usize>)>, IntersectError>>,
     )>,
 >;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), IntersectError> {
     let app = app::App::default();
     let mut wind = window::Window::default()
         .with_size(800, 800)
         .center_screen()
         .with_label("Iterative sweep-line intersection algorithm, press space to step");
 
-    wind.set_color(Color::Black);
+    wind.set_color(enums::Color::Black);
     wind.end();
     wind.show();
     let alg_data: AlgoType = Rc::from(RefCell::from((AlgorithmData::<f64>::default(), None)));
@@ -78,10 +77,10 @@ fn main() -> Result<(), Error> {
 
     let alg_data_c = alg_data.clone();
     // This is called whenever the window is drawn and redrawn (in the event loop)
-    wind.draw(move || {
+    wind.draw(move |_| {
         let alg_data_b = alg_data_c.borrow();
 
-        draw::set_draw_color(Color::White);
+        draw::set_draw_color(enums::Color::White);
         if DRAW_TEXT {
             let mut astring = String::from("'ignore_end_point_intersections' is ");
             if alg_data_b.0.ignore_end_point_intersections {
@@ -96,17 +95,17 @@ fn main() -> Result<(), Error> {
         }
 
         // draw sweep-line
-        draw::set_draw_color(Color::Blue);
+        draw::set_draw_color(enums::Color::Blue);
 
         let sweepline = alg_data_b.0.get_sweepline_pos();
         draw::draw_line(0, sweepline.y as i32, 800, sweepline.y as i32);
 
-        draw::set_draw_color(Color::White);
+        draw::set_draw_color(enums::Color::White);
         for (line_index, line) in alg_data_b.0.get_lines().iter().enumerate() {
             if line.end.y > sweepline.y {
-                draw::set_draw_color(Color::Green);
+                draw::set_draw_color(enums::Color::Green);
             } else {
-                draw::set_draw_color(Color::White);
+                draw::set_draw_color(enums::Color::White);
             }
             draw::draw_line(
                 line.start.x as i32,
@@ -124,12 +123,12 @@ fn main() -> Result<(), Error> {
             }
         }
         // draw end points not handled yet.
-        draw::set_draw_color(Color::Green);
+        draw::set_draw_color(enums::Color::Green);
         for (k, _v) in alg_data_b.0.get_site_events().as_ref().unwrap().iter() {
             draw::draw_circle(k.pos.x, k.pos.y, 2.0);
         }
         // draw found intersections
-        draw::set_draw_color(Color::Yellow);
+        draw::set_draw_color(enums::Color::Yellow);
         if let Some(r) = alg_data_b.0.get_results() {
             for (k, _v) in r.iter() {
                 draw::draw_circle(k.pos.x, k.pos.y, 2.0);
@@ -148,7 +147,7 @@ fn main() -> Result<(), Error> {
         }
 
         // draw active lines
-        draw::set_draw_color(Color::Red);
+        draw::set_draw_color(enums::Color::Red);
         for line_index in alg_data_b.0.get_active_lines().iter().flatten() {
             let line = alg_data_b.0.get_lines()[*line_index];
             draw::draw_line(
@@ -168,13 +167,13 @@ fn main() -> Result<(), Error> {
         }
 
         // draw current position
-        draw::set_draw_color(Color::Red);
+        draw::set_draw_color(enums::Color::Red);
         draw::draw_circle(sweepline.x, sweepline.y, 3.0);
-        draw::set_draw_color(Color::Blue);
+        draw::set_draw_color(enums::Color::Blue);
         draw::draw_circle(sweepline.x, sweepline.y, 4.0);
     });
     let alg_data_c = Rc::clone(&alg_data);
-    wind.handle(move |ev| match ev {
+    wind.handle(move |_, ev| match ev {
         enums::Event::KeyUp => {
             let app_event_txt = &app::event_text() as &str;
 
@@ -232,7 +231,7 @@ fn main() -> Result<(), Error> {
                     let alg_data_clone = Rc::clone(&alg_data_c);
                     print_results(alg_data_clone);
                 }
-                redraw();
+                app::redraw();
             };
             true
         }
@@ -382,7 +381,7 @@ fn print_results(data: AlgoType) {
 }
 
 /// Add data to the input lines. Populate the event queue
-fn add_data(data: AlgoType) -> Result<(), Error> {
+fn add_data(data: AlgoType) -> Result<(), IntersectError> {
     let mut data_b = data.borrow_mut();
 
     let _l: [[i32; 4]; 356] = [

@@ -9,7 +9,7 @@ use num_traits::Float;
 
 //#[ignore]
 #[test]
-fn large_test_1() -> Result<(), intersect2d::Error> {
+fn large_test_1() -> Result<(), intersect2d::IntersectError> {
     let _l: [[f64; 4]; 52] = [
         [200., 200., 200., 400.],
         [200., 400., 400., 400.],
@@ -130,7 +130,7 @@ fn large_test_1() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn large_test_2() -> Result<(), intersect2d::Error> {
+fn large_test_2() -> Result<(), intersect2d::IntersectError> {
     let _l: [[f64; 4]; 356] = [
         [395., 20., 402., 20.],
         [402., 20., 408., 23.],

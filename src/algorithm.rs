@@ -45,9 +45,7 @@ licenses /why-not-lgpl.html>.
 
 use super::{intersect, ulps_eq_c};
 use core::fmt;
-use fnv::FnvHashSet;
 use num_traits::{Float, Zero};
-use ordered_float::OrderedFloat;
 use std::cmp;
 use std::convert::identity;
 use std::fmt::Debug;
@@ -97,10 +95,10 @@ where
             if approx::ulps_eq!(&self.pos.x, &other.pos.x) {
                 Some(cmp::Ordering::Equal)
             } else {
-                Some(OrderedFloat(self.pos.x).cmp(&OrderedFloat(other.pos.x)))
+                self.pos.x.partial_cmp(&other.pos.x)
             }
         } else {
-            Some(OrderedFloat(self.pos.y).cmp(&OrderedFloat(other.pos.y)))
+            self.pos.y.partial_cmp(&other.pos.y)
         }
     }
 }
@@ -446,7 +444,7 @@ where
     // The unhandled events
     site_events: Option<rb_tree::RBMap<SiteEventKey<T>, SiteEvent<T>>>,
     // The lines we are considering at any given point in time
-    active_lines: Option<FnvHashSet<usize>>,
+    active_lines: Option<ahash::AHashSet<usize>>,
     // A list of intersection points and the line segments involved in each intersection
     result: Option<rb_tree::RBMap<SiteEventKey<T>, Vec<usize>>>,
     intersection_calls: usize,
@@ -475,7 +473,7 @@ where
             site_events: Some(rb_tree::RBMap::new()),
             lines: Vec::<geo::Line<T>>::new(),
             result: Some(rb_tree::RBMap::new()),
-            active_lines: Some(FnvHashSet::default()),
+            active_lines: Some(ahash::AHashSet::default()),
             intersection_calls: 0,
             neighbour_priority: Some(MinMax::new()),
             connected_priority: Some(MinMaxSlope::new()),
@@ -504,14 +502,19 @@ where
     #[allow(clippy::type_complexity)]
     pub fn take_results<'a>(
         &mut self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, super::Error>
+    ) -> Result<
+        Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        super::IntersectError,
+    >
     where
         T: 'a,
     {
         if let Some(rv) = self.result.take() {
             Ok(Box::new(rv.into_iter().map(|x| (x.0.pos, x.1))))
         } else {
-            Err(super::Error::ResultsAlreadyTaken)
+            Err(super::IntersectError::ResultsAlreadyTaken(
+                "Results already taken from structure".to_string(),
+            ))
         }
     }
 
@@ -519,7 +522,7 @@ where
         &self.site_events
     }
 
-    pub fn get_active_lines(&self) -> &Option<FnvHashSet<usize>> {
+    pub fn get_active_lines(&self) -> &Option<ahash::AHashSet<usize>> {
         &self.active_lines
     }
 
@@ -530,7 +533,7 @@ where
     pub fn with_stop_at_first_intersection(
         &mut self,
         value: bool,
-    ) -> Result<&mut Self, super::Error> {
+    ) -> Result<&mut Self, super::IntersectError> {
         self.stop_at_first_intersection = value;
         Ok(self)
     }
@@ -538,7 +541,7 @@ where
     pub fn with_ignore_end_point_intersections(
         &mut self,
         value: bool,
-    ) -> Result<&mut Self, super::Error> {
+    ) -> Result<&mut Self, super::IntersectError> {
         self.ignore_end_point_intersections = value;
         Ok(self)
     }
@@ -547,7 +550,7 @@ where
     /// Sort the end point according to the order of SiteEventKey.
     /// Populate the event queue
     /// Todo: this duplicates functionality of 'with_ref_lines()', try to consolidate..
-    pub fn with_lines<I>(&mut self, input_iter: I) -> Result<&mut Self, super::Error>
+    pub fn with_lines<I>(&mut self, input_iter: I) -> Result<&mut Self, super::IntersectError>
     where
         I: Iterator<Item = geo::Line<T>>,
     {
@@ -559,7 +562,9 @@ where
                 && aline.end.x.is_finite()
                 && aline.end.y.is_finite())
             {
-                return Err(super::Error::InvalidData);
+                return Err(super::IntersectError::InvalidData(
+                    "Can't check for intersections on non-finite data".to_string(),
+                ));
             }
 
             // Re-arrange so that:
@@ -604,7 +609,10 @@ where
     /// Sort the end point according to the order of SiteEventKey.
     /// Populate the event queue
     /// TODO: is this worth keeping? AlgorithmData always keeps copies of the input geometry anyways
-    pub fn with_ref_lines<'a, I>(&mut self, input_iter: I) -> Result<&mut Self, super::Error>
+    pub fn with_ref_lines<'a, I>(
+        &mut self,
+        input_iter: I,
+    ) -> Result<&mut Self, super::IntersectError>
     where
         T: 'a,
         I: Iterator<Item = &'a geo::Line<T>>,
@@ -617,7 +625,9 @@ where
                 && aline.end.x.is_finite()
                 && aline.end.y.is_finite())
             {
-                return Err(super::Error::InvalidData);
+                return Err(super::IntersectError::InvalidData(
+                    "Can't check for intersections on non-finite data".to_string(),
+                ));
             }
 
             // Re-arrange so that:
@@ -714,7 +724,10 @@ where
     #[allow(clippy::type_complexity)]
     pub fn compute<'a>(
         &mut self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, super::Error>
+    ) -> Result<
+        Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        super::IntersectError,
+    >
     where
         T: 'a,
     {
@@ -763,7 +776,7 @@ where
 
     /// handles input event, returns true when done
     /// You will have call take_results() if the method returns true
-    pub fn compute_iterative(&mut self) -> Result<bool, super::Error> {
+    pub fn compute_iterative(&mut self) -> Result<bool, super::IntersectError> {
         if self.stop_at_first_intersection && self.result.as_ref().map_or(false, |x| !x.is_empty())
         {
             return Ok(true);
@@ -815,7 +828,7 @@ where
         &mut self,
         key: &SiteEventKey<T>,
         event: &SiteEvent<T>,
-        active_lines: &mut FnvHashSet<usize>,
+        active_lines: &mut ahash::AHashSet<usize>,
         neighbour_priority: &mut MinMax<T>,
         connected_priority: &mut MinMaxSlope<T>,
         site_events: &mut rb_tree::RBMap<SiteEventKey<T>, SiteEvent<T>>,

@@ -96,3 +96,14 @@ fn self_intersection_6() {
     println!("{:?}", coordinates.is_self_intersecting());
     assert!(!coordinates.is_self_intersecting().unwrap());
 }
+
+#[test]
+fn self_intersection_7() {
+    let coordinates = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
+    let line_string = geo::LineString::from(coordinates);
+
+    if line_string.is_self_intersecting().unwrap(){
+        println!("Intersection detected");
+    }
+    assert!(line_string.is_self_intersecting().unwrap());
+}

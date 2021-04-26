@@ -10,7 +10,7 @@ use intersect2d::{intersect, scale_to_coordinate, to_lines};
 use num_traits::Float;
 
 #[test]
-fn two_connected_1() -> Result<(), intersect2d::Error> {
+fn two_connected_1() -> Result<(), intersect2d::IntersectError> {
     let _l: [[f64; 4]; 2] = [[200., 200., 300., 300.], [400., 200., 300., 300.]];
     let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(true)?
@@ -22,7 +22,7 @@ fn two_connected_1() -> Result<(), intersect2d::Error> {
 }
 
 #[test]
-fn two_connected_2() -> Result<(), intersect2d::Error> {
+fn two_connected_2() -> Result<(), intersect2d::IntersectError> {
     let _l: [[f64; 4]; 2] = [[200., 200., 300., 300.], [400., 200., 300., 300.]];
     let mut iter = AlgorithmData::<f64>::default()
         .with_ignore_end_point_intersections(false)?
@@ -40,7 +40,7 @@ fn two_connected_2() -> Result<(), intersect2d::Error> {
 }
 
 #[test]
-fn two_connected_3() -> Result<(), intersect2d::Error> {
+fn two_connected_3() -> Result<(), intersect2d::IntersectError> {
     // README.md example
     // use geo;
     // use intersect2d::algorithm::AlgorithmData;
@@ -66,7 +66,7 @@ fn two_connected_3() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn connected_3_1() -> Result<(), intersect2d::Error> {
+fn connected_3_1() -> Result<(), intersect2d::IntersectError> {
     // this is test connected_3_1
     let _l: [[f64; 4]; 3] = [
         [200., 200., 300., 300.],
@@ -89,7 +89,7 @@ fn connected_3_1() -> Result<(), intersect2d::Error> {
 }
 
 #[test]
-fn connected_3_1_linestring() -> Result<(), intersect2d::Error> {
+fn connected_3_1_linestring() -> Result<(), intersect2d::IntersectError> {
     // README example
     let coords = vec![(200., 200.), (300., 300.), (400., 200.), (200., 300.)];
     let line_string: geo::LineString<f32> = coords.into_iter().collect();
@@ -107,7 +107,7 @@ fn connected_3_1_linestring() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn connected_3_2() -> Result<(), intersect2d::Error> {
+fn connected_3_2() -> Result<(), intersect2d::IntersectError> {
     // this is test connected_3_2
     let _l: [[f64; 4]; 3] = [
         [200., 200., 300., 300.],
@@ -125,7 +125,7 @@ fn connected_3_2() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn connected_3_3() -> Result<(), intersect2d::Error> {
+fn connected_3_3() -> Result<(), intersect2d::IntersectError> {
     // this is test connected_3_3
     let _l: [[f64; 4]; 3] = [
         [200., 200., 300., 300.],
@@ -149,7 +149,7 @@ fn connected_3_3() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn connected_3_4() -> Result<(), intersect2d::Error> {
+fn connected_3_4() -> Result<(), intersect2d::IntersectError> {
     // this is test connected_3_4
     let _l: [[f64; 4]; 3] = [
         [200., 200., 300., 300.],
@@ -172,7 +172,7 @@ fn connected_3_4() -> Result<(), intersect2d::Error> {
 }
 
 #[test]
-fn connected_3_5() -> Result<(), intersect2d::Error> {
+fn connected_3_5() -> Result<(), intersect2d::IntersectError> {
     // this is test connected_3_5
     let _l: [[f64; 4]; 6] = [
         [200., 200., 300., 300.],
@@ -208,7 +208,7 @@ fn connected_3_5() -> Result<(), intersect2d::Error> {
 }
 
 #[test]
-fn connected_3_6() -> Result<(), intersect2d::Error> {
+fn connected_3_6() -> Result<(), intersect2d::IntersectError> {
     // this is test connected_3_6
     let _l: [[f64; 4]; 6] = [
         [200., 200., 300., 300.],
@@ -228,7 +228,7 @@ fn connected_3_6() -> Result<(), intersect2d::Error> {
 }
 
 #[test]
-fn connected_3_7() -> Result<(), intersect2d::Error> {
+fn connected_3_7() -> Result<(), intersect2d::IntersectError> {
     // this is test connected_3_7
     let _l: [[f64; 4]; 6] = [
         [200., 200., 300., 300.],
@@ -316,7 +316,7 @@ fn connected_3_7() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn chevron_1() -> Result<(), intersect2d::Error> {
+fn chevron_1() -> Result<(), intersect2d::IntersectError> {
     // this is chevron_1
     let _l: [[f64; 4]; 5] = [
         [200., 200., 300., 300.],
@@ -342,7 +342,7 @@ fn chevron_1() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn chevron_2() -> Result<(), intersect2d::Error> {
+fn chevron_2() -> Result<(), intersect2d::IntersectError> {
     // this is chevron_2
     let _l: [[f64; 4]; 5] = [
         [200., 200., 300., 300.],
@@ -384,7 +384,7 @@ fn chevron_2() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn chevron_3() -> Result<(), intersect2d::Error> {
+fn chevron_3() -> Result<(), intersect2d::IntersectError> {
     // this is chevron_3
     let _l: [[f64; 4]; 10] = [
         [200., 200., 300., 300.],
@@ -425,7 +425,7 @@ fn chevron_3() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn connected_5_1() -> Result<(), intersect2d::Error> {
+fn connected_5_1() -> Result<(), intersect2d::IntersectError> {
     // this is connected_5_1
     let _l: [[f64; 4]; 5] = [
         [300., 300., 500., 300.],
@@ -490,7 +490,7 @@ fn connected_5_1() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn connected_7_1() -> Result<(), intersect2d::Error> {
+fn connected_7_1() -> Result<(), intersect2d::IntersectError> {
     // this is connected_7_1
     let _l: [[f64; 4]; 5] = [
         [200., 200., 300., 300.],
@@ -537,7 +537,7 @@ fn connected_7_1() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn connected_7_2() -> Result<(), intersect2d::Error> {
+fn connected_7_2() -> Result<(), intersect2d::IntersectError> {
     // this is connected_7_2
     let _l: [[f64; 4]; 7] = [
         [200., 200., 300., 300.],
@@ -601,7 +601,7 @@ fn connected_7_2() -> Result<(), intersect2d::Error> {
 }
 
 #[test]
-fn complex_1() -> Result<(), intersect2d::Error> {
+fn complex_1() -> Result<(), intersect2d::IntersectError> {
     // this is complex_1
     let _l: [[f64; 4]; 15] = [
         [10., 5., 78., 12.],
@@ -728,7 +728,7 @@ fn complex_1() -> Result<(), intersect2d::Error> {
 
 //#[ignore]
 #[test]
-fn a_test() -> Result<(), intersect2d::Error> {
+fn a_test() -> Result<(), intersect2d::IntersectError> {
     let _l: [[f32; 4]; 6] = [
         [651.3134, 410.21536, 335.7384, 544.54614],
         [335.7384, 544.54614, 154.29922, 363.10654],

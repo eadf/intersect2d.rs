@@ -1,6 +1,6 @@
 [package]
 name = "intersect2d"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["eadf"]
 edition = "2018"
 description = "Line segment intersection detection"
@@ -14,16 +14,15 @@ name = "fltk_gui"
 path = "example/fltk_gui.rs"
 
 [dependencies]
-geo = "^0.17.1"
-ordered-float = "^2.1.1"
-rb_tree = "^0.3.5"
+geo = ">=0.17.1,<0.19.0"
+rb_tree = "^0.4.0"
 approx = "^0.4.0"
 num-traits = "^0.2.14"
-fnv = "^1.0.7"
+ahash = "^0.7.2"
 thiserror = "1.0.24"
 
 [dev-dependencies]
-fltk = "^0.16.4"
+fltk = "^1.0.2"
 itertools = "^0.10.0"
 criterion = "^0.3.4"
 

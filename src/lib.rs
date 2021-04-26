@@ -58,13 +58,15 @@ use thiserror::Error;
 pub mod algorithm;
 
 #[derive(Error, Debug)]
-pub enum Error {
+pub enum IntersectError {
+    #[error("Something bad happened")]
+    InternalError(String),
     #[error("No NaN, inf etc. are allowed")]
-    InvalidData,
+    InvalidData(String),
     #[error("When searching for intersections in LineStrings the 'ignore_end_point_intersections' parameter must be set to 'true'.")]
-    InvalidSearchParameter,
+    InvalidSearchParameter(String),
     #[error("Results already taken from the algorithm data struct")]
-    ResultsAlreadyTaken,
+    ResultsAlreadyTaken(String),
 }
 
 /// Utility function converting an array slice into a vec of Line
@@ -328,13 +330,13 @@ where
     T::Epsilon: Copy,
 {
     /// Returns true if any line intersects any other line in the collection.
-    fn is_self_intersecting(&self) -> Result<bool, Error>;
+    fn is_self_intersecting(&self) -> Result<bool, IntersectError>;
 
     /// Returns a list of intersection points and the involved lines, if any intersections are found.
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
     where
         T: 'a;
 }
@@ -352,27 +354,27 @@ where
 {
     /// Returns true if any line intersects any other line in the collection.
     /// If the end points are identical they will be reported too.
-    fn is_self_intersecting_inclusive(&self) -> Result<bool, Error>;
+    fn is_self_intersecting_inclusive(&self) -> Result<bool, IntersectError>;
 
     /// Returns a list of intersection points and the involved lines, if any intersections are found.
     /// If the end points are identical they will be reported too.
     #[allow(clippy::type_complexity)]
     fn self_intersections_inclusive<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
     where
         T: 'a;
 }
 
 impl<T> SelfIntersectingInclusive<T> for Vec<geo::Line<T>>
-    where
-        T: Float
+where
+    T: Float
         + num_traits::ToPrimitive
         + geo::GeoFloat
         + geo::CoordFloat
         + approx::AbsDiffEq
         + approx::UlpsEq,
-        T::Epsilon: Copy,
+    T::Epsilon: Copy,
 {
     /// Returns true if the LineString is self intersecting.
     /// LineStrings.
@@ -398,11 +400,11 @@ impl<T> SelfIntersectingInclusive<T> for Vec<geo::Line<T>>
     /// ]).lines().collect();
     /// assert!(lines.is_self_intersecting_inclusive().unwrap());
     /// ```
-    fn is_self_intersecting_inclusive(&self) -> Result<bool, Error> {
+    fn is_self_intersecting_inclusive(&self) -> Result<bool, IntersectError> {
         // at around >25 line segments the sweep-line algorithm is faster
         if self.len() < 25 {
             for l1 in self.iter().enumerate() {
-                for l2 in self.iter().skip(l1.0+1) {
+                for l2 in self.iter().skip(l1.0 + 1) {
                     if l1.1.intersects(l2) {
                         return Ok(true);
                     }
@@ -463,15 +465,28 @@ impl<T> SelfIntersectingInclusive<T> for Vec<geo::Line<T>>
     #[allow(clippy::type_complexity)]
     fn self_intersections_inclusive<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
-        where
-            T: 'a,
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
+    where
+        T: 'a,
     {
         if self.len() < 25 {
             // at around <25 line segments the brute force test is faster
+
+            // sanity check for each line
+            for a_line in self.iter() {
+                if !a_line.start.x.is_finite()
+                    || !a_line.start.y.is_finite()
+                    || !a_line.end.x.is_finite()
+                    || !a_line.end.y.is_finite()
+                {
+                    return Err(IntersectError::InvalidData(
+                        "Can't check for intersections on non-finite data".to_string(),
+                    ));
+                }
+            }
             let mut rv = Vec::<(geo::Coordinate<T>, Vec<usize>)>::new();
             for l1 in self.iter().enumerate() {
-                for l2 in self.iter().enumerate().skip(l1.0+1) {
+                for l2 in self.iter().enumerate().skip(l1.0 + 1) {
                     if let Some(i) = intersect(l1.1, l2.1) {
                         rv.push((i.single(), vec![l1.0, l2.0]));
                     }
@@ -526,11 +541,23 @@ where
     /// ]).lines().collect();
     /// assert!(lines.is_self_intersecting().unwrap());
     /// ```
-    fn is_self_intersecting(&self) -> Result<bool, Error> {
+    fn is_self_intersecting(&self) -> Result<bool, IntersectError> {
         // at around >25 line segments the sweep-line algorithm is faster
         if self.len() < 25 {
+            // sanity check for each line
+            for a_line in self.iter() {
+                if !a_line.start.x.is_finite()
+                    || !a_line.start.y.is_finite()
+                    || !a_line.end.x.is_finite()
+                    || !a_line.end.y.is_finite()
+                {
+                    return Err(IntersectError::InvalidData(
+                        "Can't check for intersections on non-finite data".to_string(),
+                    ));
+                }
+            }
             for l1 in self.iter().enumerate() {
-                for l2 in self.iter().skip(l1.0+1) {
+                for l2 in self.iter().skip(l1.0 + 1) {
                     if ulps_eq_c(&l1.1.start, &l2.start)
                         || ulps_eq_c(&l1.1.start, &l2.end)
                         || ulps_eq_c(&l1.1.end, &l2.start)
@@ -592,15 +619,28 @@ where
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
     where
         T: 'a,
     {
         if self.len() < 25 {
             // at around <25 line segments the brute force test is faster
+
+            // sanity check for each line
+            for a_line in self.iter() {
+                if !a_line.start.x.is_finite()
+                    || !a_line.start.y.is_finite()
+                    || !a_line.end.x.is_finite()
+                    || !a_line.end.y.is_finite()
+                {
+                    return Err(IntersectError::InvalidData(
+                        "Can't check for intersections on non-finite data".to_string(),
+                    ));
+                }
+            }
             let mut rv = Vec::<(geo::Coordinate<T>, Vec<usize>)>::new();
             for l1 in self.iter().enumerate() {
-                for l2 in self.iter().enumerate().skip(l1.0+1) {
+                for l2 in self.iter().enumerate().skip(l1.0 + 1) {
                     if ulps_eq_c(&l1.1.start, &l2.1.start)
                         || ulps_eq_c(&l1.1.start, &l2.1.end)
                         || ulps_eq_c(&l1.1.end, &l2.1.start)
@@ -663,11 +703,19 @@ where
     /// ]);
     /// assert!(line_string.is_self_intersecting().unwrap());
     /// ```
-    fn is_self_intersecting(&self) -> Result<bool, Error> {
+    fn is_self_intersecting(&self) -> Result<bool, IntersectError> {
         // at around >25 line segments the sweep-line algorithm is faster
         if self.0.len() < 25 {
+            // sanity check for each line
+            for point in self.points_iter() {
+                if !point.x().is_finite() || !point.y().is_finite() {
+                    return Err(IntersectError::InvalidData(
+                        "Can't check for intersections on non-finite data".to_string(),
+                    ));
+                }
+            }
             for l1 in self.lines().enumerate() {
-                for l2 in self.lines().skip(l1.0+1) {
+                for l2 in self.lines().skip(l1.0 + 1) {
                     if ulps_eq_c(&l1.1.start, &l2.start)
                         || ulps_eq_c(&l1.1.start, &l2.end)
                         || ulps_eq_c(&l1.1.end, &l2.start)
@@ -731,15 +779,23 @@ where
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, Error>
+    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
     where
         T: 'a,
     {
         if self.0.len() < 25 {
             // at around <25 line segments the brute force test is faster
+            // sanity check for each line
+            for point in self.points_iter() {
+                if !point.x().is_finite() || !point.y().is_finite() {
+                    return Err(IntersectError::InvalidData(
+                        "Can't check for intersections on non-finite data".to_string(),
+                    ));
+                }
+            }
             let mut rv = Vec::<(geo::Coordinate<T>, Vec<usize>)>::new();
             for l1 in self.lines().enumerate() {
-                for l2 in self.lines().enumerate().skip(l1.0+1) {
+                for l2 in self.lines().enumerate().skip(l1.0 + 1) {
                     if ulps_eq_c(&l1.1.start, &l2.1.start)
                         || ulps_eq_c(&l1.1.start, &l2.1.end)
                         || ulps_eq_c(&l1.1.end, &l2.1.start)
