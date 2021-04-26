@@ -503,7 +503,7 @@ where
     pub fn take_results<'a>(
         &mut self,
     ) -> Result<
-        Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        Box<dyn ExactSizeIterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
         super::IntersectError,
     >
     where
@@ -725,7 +725,7 @@ where
     pub fn compute<'a>(
         &mut self,
     ) -> Result<
-        Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        Box<dyn ExactSizeIterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
         super::IntersectError,
     >
     where

@@ -336,7 +336,10 @@ where
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
+    ) -> Result<
+        Box<dyn ExactSizeIterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        IntersectError,
+    >
     where
         T: 'a;
 }
@@ -361,7 +364,10 @@ where
     #[allow(clippy::type_complexity)]
     fn self_intersections_inclusive<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
+    ) -> Result<
+        Box<dyn ExactSizeIterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        IntersectError,
+    >
     where
         T: 'a;
 }
@@ -465,7 +471,10 @@ where
     #[allow(clippy::type_complexity)]
     fn self_intersections_inclusive<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
+    ) -> Result<
+        Box<dyn ExactSizeIterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        IntersectError,
+    >
     where
         T: 'a,
     {
@@ -619,7 +628,10 @@ where
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
+    ) -> Result<
+        Box<dyn ExactSizeIterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        IntersectError,
+    >
     where
         T: 'a,
     {
@@ -779,7 +791,10 @@ where
     #[allow(clippy::type_complexity)]
     fn self_intersections<'a>(
         &self,
-    ) -> Result<Box<dyn Iterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>, IntersectError>
+    ) -> Result<
+        Box<dyn ExactSizeIterator<Item = (geo::Coordinate<T>, Vec<usize>)> + 'a>,
+        IntersectError,
+    >
     where
         T: 'a,
     {
