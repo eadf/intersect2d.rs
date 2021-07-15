@@ -1,6 +1,6 @@
 [package]
 name = "intersect2d"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["eadf"]
 edition = "2018"
 description = "Line segment intersection detection"
@@ -14,17 +14,17 @@ name = "fltk_gui"
 path = "example/fltk_gui.rs"
 
 [dependencies]
-geo = ">=0.17.1,<0.19.0"
-rb_tree = "^0.4.0"
-approx = "^0.4.0"
-num-traits = "^0.2.14"
-ahash = "^0.7.2"
-thiserror = "1.0.24"
+geo = "0.18"
+rb_tree = "0.4"
+approx = "0.5"
+num-traits = "0.2"
+ahash = "0.7"
+thiserror = "1.0"
 
 [dev-dependencies]
-fltk = "^1.0.2"
-itertools = "^0.10.0"
-criterion = "^0.3.4"
+fltk = "1.1"
+itertools = "0.10"
+criterion = "0.3"
 
 [features]
 # this is used to print algorithm progression traces to the console

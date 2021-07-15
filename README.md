@@ -1,10 +1,9 @@
-
-
-[![Crates.io](https://meritbadge.herokuapp.com/intersect2d)](https://crates.io/crates/intersect2d)
+[![crates.io](https://img.shields.io/crates/v/intersect2d.svg)](https://crates.io/crates/intersect2d)
 [![Documentation](https://docs.rs/intersect2d/badge.svg)](https://docs.rs/intersect2d)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)
-[![dependency status](https://deps.rs/crate/intersect2d/0.4.0/status.svg)](https://deps.rs/crate/intersect2d/0.4.0)
+[![dependency status](https://deps.rs/crate/intersect2d/0.4.1/status.svg)](https://deps.rs/crate/intersect2d/0.4.1)
+
 # intersect2d
 After watching [Philipp Kindermann's](https://www.youtube.com/watch?v=I9EsN2DTnN8) excellent sweep-line 
 videos I think I finally understand how this algorithm works.
