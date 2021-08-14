@@ -3,6 +3,7 @@
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)
 [![dependency status](https://deps.rs/crate/intersect2d/0.4.1/status.svg)](https://deps.rs/crate/intersect2d/0.4.1)
+![license](https://img.shields.io/crates/l/intersect2d)
 
 # intersect2d
 After watching [Philipp Kindermann's](https://www.youtube.com/watch?v=I9EsN2DTnN8) excellent sweep-line 
@@ -10,8 +11,7 @@ videos I think I finally understand how this algorithm works.
 
 This is my humble take on an implementation of the segment line 
 intersection sweep-line algorithm.
-\
-\
+
 The library crate also contains a [line intersection function](https://stackoverflow.com/a/565282).
 
 Code still in development, not ready for any purpose.
