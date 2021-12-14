@@ -2,7 +2,7 @@
 [![Documentation](https://docs.rs/intersect2d/badge.svg)](https://docs.rs/intersect2d)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Rust/badge.svg)
 [![Workflow](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)](https://github.com/eadf/intersect2d.rs/workflows/Clippy/badge.svg)
-[![dependency status](https://deps.rs/crate/intersect2d/0.4.1/status.svg)](https://deps.rs/crate/intersect2d/0.4.1)
+[![dependency status](https://deps.rs/crate/intersect2d/0.4.2/status.svg)](https://deps.rs/crate/intersect2d/0.4.2)
 ![license](https://img.shields.io/crates/l/intersect2d)
 
 # intersect2d
@@ -14,7 +14,7 @@ intersection sweep-line algorithm.
 
 The library crate also contains a [line intersection function](https://stackoverflow.com/a/565282).
 
-Code still in development, not ready for any purpose.
+This crate is educational, not ready for any production purpose. It has been adopted as a [cgmath](https://crates.io/crates/cgmath) library [here](https://crates.io/crates/linestring).
 
 ![Rusty voronoi](img.png)
 
@@ -22,9 +22,6 @@ Interactive step-by-step example:
 ```fish
 cargo run --example fltk_gui --features console_trace
 ```
-
-Most of this crate have been adapted for [nalgebra](https://crates.io/crates/nalgebra), 
-[cgmath](https://crates.io/crates/cgmath), [mint](https://crates.io/crates/mint) and plain vector [here](https://crates.io/crates/linestring).
 
 Intersection function API example:
 ```rust
