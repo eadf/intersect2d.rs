@@ -64,6 +64,31 @@ fn two_connected_3() -> Result<(), intersect2d::IntersectError> {
     Ok(())
 }
 
+
+#[test]
+fn two_connected_4() -> Result<(), intersect2d::IntersectError> {
+    let intersection = intersect(
+            &geo::Line::new(
+                geo::Coordinate{ x: 0.0, y: 0.0 },
+                geo::Coordinate{ x: 0.0, y: 100.0 },
+            ),
+            &geo::Line::new(
+                geo::Coordinate{ x: 0.0, y: 100.0 },
+                geo::Coordinate{ x: 0.0, y: 200.0 },
+            ),
+        );
+    println!("intersection: {:?}", intersection);
+    assert!(
+        matches!(
+            intersection.expect("lines should intersect"),
+            intersect2d::Intersection::Intersection(coord)
+            if coord == geo::Coordinate{ x: 0.0, y: 100.0 }
+        )
+    );
+    Ok(())
+}
+
+
 //#[ignore]
 #[test]
 fn connected_3_1() -> Result<(), intersect2d::IntersectError> {
