@@ -14,7 +14,7 @@ intersection sweep-line algorithm.
 
 The library crate also contains a [line intersection function](https://stackoverflow.com/a/565282).
 
-This crate is educational, not ready for any production purpose. It has been adopted as a [cgmath](https://crates.io/crates/cgmath) library [here](https://crates.io/crates/linestring).
+This crate is educational, not ready for any production purpose. It has been adopted as a [glam](https://crates.io/crates/glam) and [cgmath](https://crates.io/crates/cgmath) library [here: Linestring](https://crates.io/crates/linestring).
 
 ![Rusty voronoi](img.png)
 
